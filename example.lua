@@ -1,0 +1,16 @@
+local Nixam = loadstring(game:HttpGet('https://raw.githubusercontent.com/YOURNAME/NixamUILibrary/main/NixamUILibrary.lua'))()
+local ui = Nixam.new("My Executor UI")
+ui:PromptKey("YOUR-SECRET-KEY", function(success)
+    if success then
+        local tab = ui:AddTab("Main")
+        local section = tab:AddSection("Controls")
+        section:AddButton("Say Hello", function() print("Hello!") end)
+        section:AddSlider("Volume", 0, 100, 50, function(val) print("Volume:", val) end)
+        section:AddDropdown("Mode", {"Easy","Medium","Hard"}, function(opt) print("Selected:", opt) end)
+        section:AddToggle("Godmode", false, function(on) print(on and "On" or "Off") end)
+        section:AddLabel("Welcome to Nixam!")
+        section:AddInput("Type Name", function(txt) print(txt) end)
+        ui:Notify("Welcome to Nixam UI Library!", 5)
+        ui:Start5MinReminder("Don't forget to take breaks!")
+    end
+end)
