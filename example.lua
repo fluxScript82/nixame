@@ -1,6 +1,6 @@
-local Nixam = loadstring(game:HttpGet('https://raw.githubusercontent.com/YOURNAME/NixamUILibrary/main/NixamUILibrary.lua'))()
+local Nixam = loadstring(game:HttpGet('https://raw.githubusercontent.com/fluxScript82/nixame/refs/heads/main/source.lua'))()
 local ui = Nixam.new("My Executor UI")
-ui:PromptKey("YOUR-SECRET-KEY", function(success)
+ui:PromptKey("12345", function(success)
     if success then
         local tab = ui:AddTab("Main")
         local section = tab:AddSection("Controls")
