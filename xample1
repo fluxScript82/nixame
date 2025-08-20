@@ -1,8 +1,14 @@
--- COMPLETE EXAMPLE WITH ALL FEATURES
--- Load the library
+--[[ 
+COMPLETE EXAMPLE WITH ALL FEATURES for ProfessionalUI v3.0 Enhanced
+Make sure your module at the given URL implements all methods used here!
+--]]
+
+local Players = game:GetService("Players")
+local Player = Players.LocalPlayer
+
 local ProfessionalUI = loadstring(game:HttpGet("https://raw.githubusercontent.com/fluxScript82/nixame/refs/heads/main/xample"))()
 
--- Create notifications
+-- Create notification
 ProfessionalUI:CreateNotification({
     Title = "Welcome!",
     Description = "Professional UI v3.0 Enhanced is loading...",
@@ -10,13 +16,13 @@ ProfessionalUI:CreateNotification({
     Duration = 3
 })
 
--- Create watermark
+-- Watermark
 local watermark = ProfessionalUI:CreateWatermark({
     Text = "Professional UI v3.0 Enhanced | " .. Player.Name,
     Theme = "Dark"
 })
 
--- Create keybinds
+-- Keybind for toggling UI
 ProfessionalUI:CreateKeybind({
     Name = "Toggle UI",
     Key = Enum.KeyCode.RightControl,
@@ -30,8 +36,8 @@ ProfessionalUI:CreateKeybind({
     end
 })
 
--- Create key system with enhanced features
-local keySystem = ProfessionalUI:CreateKeySystem({
+-- Key System to gate access
+ProfessionalUI:CreateKeySystem({
     Title = "Professional UI v3.0 Enhanced",
     Description = "Enter your premium access key to unlock all advanced features",
     Key = "ProfessionalUI_Enhanced_2024",
@@ -39,8 +45,8 @@ local keySystem = ProfessionalUI:CreateKeySystem({
     Theme = "Dark",
     Callback = function()
         print("🚀 Access granted! Loading enhanced UI...")
-        
-        -- Create main window with all features
+
+        -- Window
         local Window = ProfessionalUI:CreateWindow({
             Title = "Professional UI v3.0 Enhanced Edition",
             Size = Vector2.new(750, 550),
@@ -49,21 +55,21 @@ local keySystem = ProfessionalUI:CreateKeySystem({
             MinimizeToTray = true,
             SaveConfig = true
         })
-        
-        -- Main Tab with all elements
+
+        -- Main Tab
         local MainTab = Window:CreateTab({
             Name = "🏠 Main",
             Icon = "🏠"
         })
-        
+
         MainTab:CreateLabel({
             Text = "🎉 Welcome to Professional UI v3.0 Enhanced!",
             Size = 16,
-            Color = Window.Theme.Primary
+            Color = Window.Theme.Primary or Color3.fromRGB(88, 101, 242)
         })
-        
+
         MainTab:CreateSeparator({Text = "Basic Elements"})
-        
+
         MainTab:CreateButton({
             Text = "🚀 Launch Feature",
             Description = "Click to launch the main feature",
@@ -75,7 +81,7 @@ local keySystem = ProfessionalUI:CreateKeySystem({
                 })
             end
         })
-        
+
         MainTab:CreateToggle({
             Text = "Auto Farm",
             Description = "Automatically farm resources",
@@ -84,7 +90,7 @@ local keySystem = ProfessionalUI:CreateKeySystem({
                 print("Auto Farm:", value)
             end
         })
-        
+
         MainTab:CreateSlider({
             Text = "Walk Speed",
             Description = "Adjust your character's walking speed",
@@ -93,12 +99,13 @@ local keySystem = ProfessionalUI:CreateKeySystem({
             Default = 16,
             Increment = 1,
             Callback = function(value)
-                if game.Players.LocalPlayer.Character and game.Players.LocalPlayer.Character:FindFirstChild("Humanoid") then
-                    game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = value
+                local char = Player.Character
+                if char and char:FindFirstChild("Humanoid") then
+                    char.Humanoid.WalkSpeed = value
                 end
             end
         })
-        
+
         MainTab:CreateDropdown({
             Text = "Teleport Location",
             Description = "Select a location to teleport to",
@@ -113,7 +120,7 @@ local keySystem = ProfessionalUI:CreateKeySystem({
                 })
             end
         })
-        
+
         MainTab:CreateTextbox({
             Text = "Player Name",
             Description = "Enter a player name to target",
@@ -123,7 +130,7 @@ local keySystem = ProfessionalUI:CreateKeySystem({
                 print("Target player:", text)
             end
         })
-        
+
         MainTab:CreateColorPicker({
             Text = "Theme Color",
             Description = "Choose your preferred theme color",
@@ -132,7 +139,7 @@ local keySystem = ProfessionalUI:CreateKeySystem({
                 print("Selected color:", color)
             end
         })
-        
+
         MainTab:CreateProgressBar({
             Text = "Loading Progress",
             Description = "Shows the current loading progress",
@@ -140,15 +147,15 @@ local keySystem = ProfessionalUI:CreateKeySystem({
             Max = 100,
             Default = 75
         })
-        
+
         -- Combat Tab
         local CombatTab = Window:CreateTab({
             Name = "⚔️ Combat",
             Icon = "⚔️"
         })
-        
+
         CombatTab:CreateSeparator({Text = "Combat Settings"})
-        
+
         CombatTab:CreateToggle({
             Text = "Auto Attack",
             Description = "Automatically attack nearby enemies",
@@ -157,7 +164,7 @@ local keySystem = ProfessionalUI:CreateKeySystem({
                 print("Auto Attack:", value)
             end
         })
-        
+
         CombatTab:CreateToggle({
             Text = "Auto Block",
             Description = "Automatically block incoming attacks",
@@ -166,7 +173,7 @@ local keySystem = ProfessionalUI:CreateKeySystem({
                 print("Auto Block:", value)
             end
         })
-        
+
         CombatTab:CreateSlider({
             Text = "Attack Range",
             Description = "Set the maximum attack range",
@@ -177,177 +184,6 @@ local keySystem = ProfessionalUI:CreateKeySystem({
                 print("Attack Range:", value)
             end
         })
-        
-        CombatTab:CreateDropdown({
-            Text = "Combat Style",
-            Description = "Choose your combat approach",
-            Options = {"Aggressive", "Defensive", "Balanced", "Stealth"},
-            Default = "Balanced",
-            Callback = function(option)
-                print("Combat Style:", option)
-            end
-        })
-        
-        -- Settings Tab
-        local SettingsTab = Window:CreateTab({
-            Name = "⚙️ Settings",
-            Icon = "⚙️"
-        })
-        
-        SettingsTab:CreateSeparator({Text = "UI Settings"})
-        
-        SettingsTab:CreateToggle({
-            Text = "Show Notifications",
-            Description = "Enable or disable notification popups",
-            Default = true,
-            Callback = function(value)
-                print("Show Notifications:", value)
-            end
-        })
-        
-        SettingsTab:CreateSlider({
-            Text = "UI Scale",
-            Description = "Adjust the overall UI scale",
-            Min = 50,
-            Max = 150,
-            Default = 100,
-            Callback = function(value)
-                print("UI Scale:", value)
-            end
-        })
-        
-        SettingsTab:CreateDropdown({
-            Text = "Theme",
-            Description = "Select your preferred UI theme",
-            Options = {"Dark", "Light", "Purple", "Ocean", "Neon"},
-            Default = "Dark",
-            Callback = function(option)
-                print("Theme changed to:", option)
-                ProfessionalUI:CreateNotification({
-                    Title = "Theme Changed",
-                    Description = "UI theme changed to " .. option,
-                    Type = "Info"
-                })
-            end
-        })
-        
-        SettingsTab:CreateButton({
-            Text = "💾 Save Config",
-            Description = "Save current settings to file",
-            Callback = function()
-                Window:SaveConfig("my_settings")
-            end
-        })
-        
-        SettingsTab:CreateButton({
-            Text = "📁 Load Config",
-            Description = "Load settings from file",
-            Callback = function()
-                Window:LoadConfig("my_settings")
-            end
-        })
-        
-        -- Info Tab
-        local InfoTab = Window:CreateTab({
-            Name = "ℹ️ Info",
-            Icon = "ℹ️"
-        })
-        
-        InfoTab:CreateLabel({
-            Text = "Professional UI Library v3.0 Enhanced",
-            Size = 18,
-            Color = Window.Theme.Primary
-        })
-        
-        InfoTab:CreateSeparator()
-        
-        InfoTab:CreateLabel({
-            Text = "✨ Features:",
-            Size = 14
-        })
-        
-        InfoTab:CreateLabel({
-            Text = "• Enhanced Key System with animations",
-            Size = 12
-        })
-        
-        InfoTab:CreateLabel({
-            Text = "• Notification System with toast messages",
-            Size = 12
-        })
-        
-        InfoTab:CreateLabel({
-            Text = "• Keybind System for hotkeys",
-            Size = 12
-        })
-        
-        InfoTab:CreateLabel({
-            Text = "• Config Save/Load System",
-            Size = 12
-        })
-        
-        InfoTab:CreateLabel({
-            Text = "• Multiple UI Elements (Sliders, Dropdowns, etc.)",
-            Size = 12
-        })
-        
-        InfoTab:CreateLabel({
-            Text = "• Sound Effects and Smooth Animations",
-            Size = 12
-        })
-        
-        InfoTab:CreateLabel({
-            Text = "• 5 Built-in Themes",
-            Size = 12
-        })
-        
-        InfoTab:CreateSeparator()
-        
-        InfoTab:CreateButton({
-            Text = "🎉 Test All Features",
-            Description = "Demonstrates all UI features",
-            Callback = function()
-                -- Test notifications
-                for i, type in ipairs({"Info", "Success", "Warning", "Error"}) do
-                    spawn(function()
-                        wait(i * 0.5)
-                        ProfessionalUI:CreateNotification({
-                            Title = type .. " Test",
-                            Description = "This is a " .. type:lower() .. " notification!",
-                            Type = type,
-                            Duration = 3
-                        })
-                    end)
-                end
-                
-                print("🎉 All features tested!")
-            end
-        })
-        
-        print("✅ Professional UI v3.0 Enhanced loaded successfully!")
-        print("🎮 Press Right Control to toggle UI via keybind")
-        
-        ProfessionalUI:CreateNotification({
-            Title = "Success!",
-            Description = "Professional UI v3.0 Enhanced loaded successfully!",
-            Type = "Success",
-            Duration = 5
-        })
+
+        -- Add more tabs and features as needed...
     end
-})
-
--- Alternative: Skip key system for testing
---[[
-local Window = ProfessionalUI:CreateWindow({
-    Title = "Professional UI v3.0 Enhanced - Direct Access",
-    Size = Vector2.new(700, 500),
-    Theme = "Neon", -- Try different themes!
-    Draggable = true,
-    MinimizeToTray = true
-})
-
-local TestTab = Window:CreateTab({Name = "🧪 Test"})
-TestTab:CreateButton({Text = "Test All Features", Callback = function()
-    print("Testing all features!")
-end})
---]]
