@@ -1,12 +1,12 @@
 --[[
     Professional Executor UI Library
-    Loadstring Version for Easy Distribution
+    Loadstring Version with Draggable Windows and Toggle UI
     
     Load with:
     local ProfessionalUI = loadstring(game:HttpGet("https://raw.githubusercontent.com/username/ProfessionalUI/main/main.lua"))()
     
     Author: Professional UI Team
-    Version: 4.0 (Loadstring Edition)
+    Version: 4.1 (Enhanced Edition)
 ]]
 
 -- Prevent multiple loads
@@ -30,7 +30,7 @@ local ProfessionalUI = {}
 ProfessionalUI.__index = ProfessionalUI
 
 -- Version info
-ProfessionalUI.Version = "4.0"
+ProfessionalUI.Version = "4.1"
 ProfessionalUI.Author = "Professional UI Team"
 
 -- Utility Functions
@@ -110,6 +110,45 @@ end
 
 function Utils.GenerateId()
     return HttpService:GenerateGUID(false)
+end
+
+function Utils.MakeDraggable(frame, dragHandle)
+    local dragging = false
+    local dragInput, dragStart, startPos
+    
+    dragHandle = dragHandle or frame
+    
+    dragHandle.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            dragging = true
+            dragStart = input.Position
+            startPos = frame.Position
+            
+            input.Changed:Connect(function()
+                if input.UserInputState == Enum.UserInputState.End then
+                    dragging = false
+                end
+            end)
+        end
+    end)
+    
+    dragHandle.InputChanged:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseMovement then
+            dragInput = input
+        end
+    end)
+    
+    UserInputService.InputChanged:Connect(function(input)
+        if input == dragInput and dragging then
+            local delta = input.Position - dragStart
+            frame.Position = UDim2.new(
+                startPos.X.Scale,
+                startPos.X.Offset + delta.X,
+                startPos.Y.Scale,
+                startPos.Y.Offset + delta.Y
+            )
+        end
+    end)
 end
 
 -- Themes
@@ -198,7 +237,9 @@ function ProfessionalUI.new(options)
         Windows = {},
         Notifications = {},
         ScreenGui = nil,
-        Id = Utils.GenerateId()
+        ToggleUI = nil,
+        Id = Utils.GenerateId(),
+        Visible = true
     }, ProfessionalUI)
     
     -- Create ScreenGui
@@ -221,6 +262,9 @@ function ProfessionalUI.new(options)
     end
     
     self.ScreenGui = screenGui
+    
+    -- Create Toggle UI
+    self:CreateToggleUI()
     
     -- Create notification container
     self.NotificationContainer = Utils.Create("Frame", {
@@ -249,8 +293,144 @@ function ProfessionalUI.new(options)
     print("🚀 Professional UI Library v" .. ProfessionalUI.Version .. " loaded successfully!")
     print("📖 Created by " .. ProfessionalUI.Author)
     print("🆔 Instance ID: " .. self.Id)
+    print("🎮 Toggle UI created - Click to open/close interface")
     
     return self
+end
+
+-- Create Toggle UI
+function ProfessionalUI:CreateToggleUI()
+    -- Main toggle frame
+    self.ToggleUI = Utils.Create("Frame", {
+        Name = "ToggleUI",
+        AnchorPoint = Vector2.new(0, 0.5),
+        BackgroundColor3 = self.Theme.Surface,
+        Position = UDim2.new(0, 10, 0.5, 0),
+        Size = UDim2.new(0, 60, 0, 60),
+        Parent = self.ScreenGui,
+        ZIndex = 1000
+    })
+    
+    Utils.CreateCorner(self.ToggleUI, 30)
+    Utils.CreateShadow(self.ToggleUI, 15, 0.5)
+    Utils.CreateStroke(self.ToggleUI, 2, self.Theme.Primary, 0)
+    
+    -- Toggle button
+    local toggleButton = Utils.Create("TextButton", {
+        Name = "ToggleButton",
+        BackgroundTransparency = 1,
+        Size = UDim2.new(1, 0, 1, 0),
+        Font = Enum.Font.GothamBold,
+        Text = "UI",
+        TextColor3 = self.Theme.Primary,
+        TextSize = 16,
+        Parent = self.ToggleUI,
+        ZIndex = 1001
+    })
+    
+    -- Status indicator
+    local statusIndicator = Utils.Create("Frame", {
+        Name = "StatusIndicator",
+        AnchorPoint = Vector2.new(1, 0),
+        BackgroundColor3 = self.Theme.Success,
+        Position = UDim2.new(1, -5, 0, 5),
+        Size = UDim2.new(0, 12, 0, 12),
+        Parent = self.ToggleUI,
+        ZIndex = 1002
+    })
+    
+    Utils.CreateCorner(statusIndicator, 6)
+    
+    -- Make toggle UI draggable
+    Utils.MakeDraggable(self.ToggleUI)
+    
+    -- Toggle functionality
+    toggleButton.MouseButton1Click:Connect(function()
+        self:ToggleVisibility()
+    end)
+    
+    -- Hover effects
+    toggleButton.MouseEnter:Connect(function()
+        Utils.Tween(self.ToggleUI, {Size = UDim2.new(0, 65, 0, 65)}, 0.2)
+        Utils.Tween(toggleButton, {TextSize = 18}, 0.2)
+    end)
+    
+    toggleButton.MouseLeave:Connect(function()
+        Utils.Tween(self.ToggleUI, {Size = UDim2.new(0, 60, 0, 60)}, 0.2)
+        Utils.Tween(toggleButton, {TextSize = 16}, 0.2)
+    end)
+    
+    -- Pulse animation for status indicator
+    spawn(function()
+        while self.ToggleUI and self.ToggleUI.Parent do
+            Utils.Tween(statusIndicator, {Size = UDim2.new(0, 15, 0, 15)}, 1)
+            wait(1)
+            Utils.Tween(statusIndicator, {Size = UDim2.new(0, 12, 0, 12)}, 1)
+            wait(1)
+        end
+    end)
+    
+    return self.ToggleUI
+end
+
+-- Toggle Visibility
+function ProfessionalUI:ToggleVisibility()
+    self.Visible = not self.Visible
+    
+    local toggleButton = self.ToggleUI:FindFirstChild("ToggleButton")
+    local statusIndicator = self.ToggleUI:FindFirstChild("StatusIndicator")
+    
+    if self.Visible then
+        -- Show all windows
+        for _, window in ipairs(self.Windows) do
+            window.Frame.Visible = true
+            Utils.Tween(window.Frame, {Size = window.Size}, 0.3, Enum.EasingStyle.Back, Enum.EasingDirection.Out)
+        end
+        
+        -- Show notifications
+        self.NotificationContainer.Visible = true
+        
+        -- Update toggle UI
+        toggleButton.Text = "UI"
+        statusIndicator.BackgroundColor3 = self.Theme.Success
+        Utils.Tween(self.ToggleUI, {BackgroundColor3 = self.Theme.Surface}, 0.2)
+        
+        self:CreateNotification({
+            title = "Interface Opened",
+            text = "Professional UI is now visible",
+            type = "success",
+            duration = 2
+        })
+    else
+        -- Hide all windows
+        for _, window in ipairs(self.Windows) do
+            Utils.Tween(window.Frame, {Size = UDim2.new(0, 0, 0, 0)}, 0.3, nil, nil, function()
+                window.Frame.Visible = false
+            end)
+        end
+        
+        -- Hide notifications
+        self.NotificationContainer.Visible = false
+        
+        -- Update toggle UI
+        toggleButton.Text = "▶"
+        statusIndicator.BackgroundColor3 = self.Theme.Warning
+        Utils.Tween(self.ToggleUI, {BackgroundColor3 = self.Theme.Secondary}, 0.2)
+    end
+end
+
+-- Hide Interface
+function ProfessionalUI:Hide()
+    if self.Visible then
+        self:ToggleVisibility()
+    end
+end
+
+-- Show Interface
+function ProfessionalUI:Show()
+    if not self.Visible then
+        self:ToggleVisibility()
+    end
 end
 
 -- Key System
@@ -281,6 +461,9 @@ function ProfessionalUI:CreateKeySystem(options)
         return keySystem
     end
     
+    -- Hide main interface while key system is active
+    self:Hide()
+    
     -- Create key system window
     local keyFrame = Utils.Create("Frame", {
         Name = "KeySystem",
@@ -289,7 +472,7 @@ function ProfessionalUI:CreateKeySystem(options)
         Position = UDim2.new(0.5, 0, 0.5, 0),
         Size = UDim2.new(0, 400 * self.Scale, 0, 320 * self.Scale),
         Parent = self.ScreenGui,
-        ZIndex = 1000
+        ZIndex = 2000
     })
     
     Utils.CreateCorner(keyFrame, 12)
@@ -304,6 +487,9 @@ function ProfessionalUI:CreateKeySystem(options)
     })
     
     Utils.CreateCorner(titleBar, 12)
+    
+    -- Make key system draggable
+    Utils.MakeDraggable(keyFrame, titleBar)
     
     -- Title bar bottom cover
     Utils.Create("Frame", {
@@ -481,42 +667,6 @@ function ProfessionalUI:CreateKeySystem(options)
         Parent = keyFrame
     })
     
-    -- Make draggable
-    local dragging = false
-    local dragInput, dragStart, startPos
-    
-    titleBar.InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 then
-            dragging = true
-            dragStart = input.Position
-            startPos = keyFrame.Position
-        end
-    end)
-    
-    titleBar.InputChanged:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseMovement then
-            dragInput = input
-        end
-    end)
-    
-    UserInputService.InputChanged:Connect(function(input)
-        if input == dragInput and dragging then
-            local delta = input.Position - dragStart
-            keyFrame.Position = UDim2.new(
-                startPos.X.Scale,
-                startPos.X.Offset + delta.X,
-                startPos.Y.Scale,
-                startPos.Y.Offset + delta.Y
-            )
-        end
-    end)
-    
-    UserInputService.InputEnded:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 then
-            dragging = false
-        end
-    end)
-    
     -- Button functionality
     submitButton.MouseButton1Click:Connect(function()
         local inputKey = keyInput.Text
@@ -536,6 +686,7 @@ function ProfessionalUI:CreateKeySystem(options)
             
             Utils.Tween(keyFrame, {Size = UDim2.new(0, 0, 0, 0)}, 0.3, nil, nil, function()
                 keyFrame:Destroy()
+                self:Show() -- Show main interface
                 keySystem.Callback()
             end)
         else
@@ -615,6 +766,9 @@ function ProfessionalUI:CreateWindow(title, size)
     })
     
     Utils.CreateCorner(window.TitleBar, 12)
+    
+    -- Make window draggable
+    Utils.MakeDraggable(window.Frame, window.TitleBar)
     
     -- Title bar bottom cover
     Utils.Create("Frame", {
@@ -711,42 +865,6 @@ function ProfessionalUI:CreateWindow(title, size)
         Parent = window.Frame,
         ZIndex = 10
     })
-    
-    -- Make window draggable
-    local dragging = false
-    local dragInput, dragStart, startPos
-    
-    window.TitleBar.InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 then
-            dragging = true
-            dragStart = input.Position
-            startPos = window.Frame.Position
-        end
-    end)
-    
-    window.TitleBar.InputChanged:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseMovement then
-            dragInput = input
-        end
-    end)
-    
-    UserInputService.InputChanged:Connect(function(input)
-        if input == dragInput and dragging then
-            local delta = input.Position - dragStart
-            window.Frame.Position = UDim2.new(
-                startPos.X.Scale,
-                startPos.X.Offset + delta.X,
-                startPos.Y.Scale,
-                startPos.Y.Offset + delta.Y
-            )
-        end
-    end)
-    
-    UserInputService.InputEnded:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 then
-            dragging = false
-        end
-    end)
     
     -- Window controls functionality
     local minimized = false
@@ -848,7 +966,7 @@ function ProfessionalUI:CreateWindow(title, size)
         
         table.insert(self.Tabs, tab)
         
-        -- Element creation functions (same as before but with improved styling)
+        -- Element creation functions
         function tab:CreateLabel(text)
             local label = Utils.Create("TextLabel", {
                 Name = "Label",
@@ -976,8 +1094,308 @@ function ProfessionalUI:CreateWindow(title, size)
             }
         end
         
-        -- Additional element functions would continue here...
-        -- (Slider, Dropdown, Textbox, etc. - same implementation as before)
+        function tab:CreateSlider(text, min, max, default, callback)
+            local sliderFrame = Utils.Create("Frame", {
+                Name = "SliderFrame",
+                BackgroundColor3 = self.Window.Library.Theme.Secondary,
+                Size = UDim2.new(1, 0, 0, 60 * self.Window.Library.Scale),
+                Parent = self.ScrollFrame
+            })
+            
+            Utils.CreateCorner(sliderFrame, 8)
+            
+            local label = Utils.Create("TextLabel", {
+                Name = "Label",
+                BackgroundTransparency = 1,
+                Position = UDim2.new(0, 15 * self.Window.Library.Scale, 0, 5 * self.Window.Library.Scale),
+                Size = UDim2.new(1, -80 * self.Window.Library.Scale, 0, 20 * self.Window.Library.Scale),
+                Font = Enum.Font.Gotham,
+                Text = text,
+                TextColor3 = self.Window.Library.Theme.Text,
+                TextSize = 14 * self.Window.Library.Scale,
+                TextXAlignment = Enum.TextXAlignment.Left,
+                Parent = sliderFrame
+            })
+            
+            local valueLabel = Utils.Create("TextLabel", {
+                Name = "ValueLabel",
+                BackgroundTransparency = 1,
+                AnchorPoint = Vector2.new(1, 0),
+                Position = UDim2.new(1, -15 * self.Window.Library.Scale, 0, 5 * self.Window.Library.Scale),
+                Size = UDim2.new(0, 60 * self.Window.Library.Scale, 0, 20 * self.Window.Library.Scale),
+                Font = Enum.Font.GothamBold,
+                Text = tostring(default),
+                TextColor3 = self.Window.Library.Theme.Primary,
+                TextSize = 14 * self.Window.Library.Scale,
+                TextXAlignment = Enum.TextXAlignment.Right,
+                Parent = sliderFrame
+            })
+            
+            local sliderTrack = Utils.Create("Frame", {
+                Name = "SliderTrack",
+                BackgroundColor3 = self.Window.Library.Theme.Border,
+                Position = UDim2.new(0, 15 * self.Window.Library.Scale, 0, 35 * self.Window.Library.Scale),
+                Size = UDim2.new(1, -30 * self.Window.Library.Scale, 0, 6 * self.Window.Library.Scale),
+                Parent = sliderFrame
+            })
+            
+            Utils.CreateCorner(sliderTrack, 3)
+            
+            local sliderFill = Utils.Create("Frame", {
+                Name = "SliderFill",
+                BackgroundColor3 = self.Window.Library.Theme.Primary,
+                Size = UDim2.new((default - min) / (max - min), 0, 1, 0),
+                Parent = sliderTrack
+            })
+            
+            Utils.CreateCorner(sliderFill, 3)
+            
+            local sliderKnob = Utils.Create("Frame", {
+                Name = "SliderKnob",
+                AnchorPoint = Vector2.new(0.5, 0.5),
+                BackgroundColor3 = Color3.fromRGB(255, 255, 255),
+                Position = UDim2.new((default - min) / (max - min), 0, 0.5, 0),
+                Size = UDim2.new(0, 16 * self.Window.Library.Scale, 0, 16 * self.Window.Library.Scale),
+                Parent = sliderTrack
+            })
+            
+            Utils.CreateCorner(sliderKnob, 8)
+            Utils.CreateShadow(sliderKnob, 8, 0.3)
+            
+            local currentValue = default
+            local dragging = false
+            
+            local function updateSlider(input)
+                local relativeX = math.clamp((input.Position.X - sliderTrack.AbsolutePosition.X) / sliderTrack.AbsoluteSize.X, 0, 1)
+                currentValue = math.floor(min + (max - min) * relativeX)
+                
+                valueLabel.Text = tostring(currentValue)
+                sliderFill.Size = UDim2.new(relativeX, 0, 1, 0)
+                sliderKnob.Position = UDim2.new(relativeX, 0, 0.5, 0)
+                
+                if callback then callback(currentValue) end
+            end
+            
+            sliderTrack.InputBegan:Connect(function(input)
+                if input.UserInputType == Enum.UserInputType.MouseButton1 then
+                    dragging = true
+                    updateSlider(input)
+                end
+            end)
+            
+            UserInputService.InputChanged:Connect(function(input)
+                if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
+                    updateSlider(input)
+                end
+            end)
+            
+            UserInputService.InputEnded:Connect(function(input)
+                if input.UserInputType == Enum.UserInputType.MouseButton1 then
+                    dragging = false
+                end
+            end)
+            
+            table.insert(self.Elements, sliderFrame)
+            return {
+                Frame = sliderFrame,
+                SetValue = function(value)
+                    currentValue = math.clamp(value, min, max)
+                    local relativeX = (currentValue - min) / (max - min)
+                    valueLabel.Text = tostring(currentValue)
+                    sliderFill.Size = UDim2.new(relativeX, 0, 1, 0)
+                    sliderKnob.Position = UDim2.new(relativeX, 0, 0.5, 0)
+                end,
+                GetValue = function()
+                    return currentValue
+                end
+            }
+        end
+        
+        function tab:CreateDropdown(text, options, default, callback)
+            local dropdownFrame = Utils.Create("Frame", {
+                Name = "DropdownFrame",
+                BackgroundColor3 = self.Window.Library.Theme.Secondary,
+                Size = UDim2.new(1, 0, 0, 40 * self.Window.Library.Scale),
+                ClipsDescendants = true,
+                Parent = self.ScrollFrame
+            })
+            
+            Utils.CreateCorner(dropdownFrame, 8)
+            
+            local label = Utils.Create("TextLabel", {
+                Name = "Label",
+                BackgroundTransparency = 1,
+                Position = UDim2.new(0, 15 * self.Window.Library.Scale, 0, 0),
+                Size = UDim2.new(1, -80 * self.Window.Library.Scale, 0, 40 * self.Window.Library.Scale),
+                Font = Enum.Font.Gotham,
+                Text = text .. ": " .. (default or "None"),
+                TextColor3 = self.Window.Library.Theme.Text,
+                TextSize = 14 * self.Window.Library.Scale,
+                TextXAlignment = Enum.TextXAlignment.Left,
+                Parent = dropdownFrame
+            })
+            
+            local dropdownButton = Utils.Create("TextButton", {
+                Name = "DropdownButton",
+                AnchorPoint = Vector2.new(1, 0.5),
+                BackgroundTransparency = 1,
+                Position = UDim2.new(1, -15 * self.Window.Library.Scale, 0.5, 0),
+                Size = UDim2.new(0, 20 * self.Window.Library.Scale, 0, 20 * self.Window.Library.Scale),
+                Font = Enum.Font.GothamBold,
+                Text = "▼",
+                TextColor3 = self.Window.Library.Theme.Text,
+                TextSize = 12 * self.Window.Library.Scale,
+                Parent = dropdownFrame
+            })
+            
+            local optionsFrame = Utils.Create("Frame", {
+                Name = "OptionsFrame",
+                BackgroundColor3 = self.Window.Library.Theme.Background,
+                Position = UDim2.new(0, 0, 1, 0),
+                Size = UDim2.new(1, 0, 0, #options * 30 * self.Window.Library.Scale),
+                Visible = false,
+                ZIndex = 100,
+                Parent = dropdownFrame
+            })
+            
+            Utils.CreateCorner(optionsFrame, 8)
+            Utils.CreateStroke(optionsFrame, 1, self.Window.Library.Theme.Border, 0.5)
+            
+            local optionsLayout = Utils.Create("UIListLayout", {
+                SortOrder = Enum.SortOrder.LayoutOrder,
+                Parent = optionsFrame
+            })
+            
+            local currentValue = default
+            local isOpen = false
+            
+            for i, option in ipairs(options) do
+                local optionButton = Utils.Create("TextButton", {
+                    Name = "Option" .. i,
+                    BackgroundTransparency = 1,
+                    Size = UDim2.new(1, 0, 0, 30 * self.Window.Library.Scale),
+                    Font = Enum.Font.Gotham,
+                    Text = option,
+                    TextColor3 = self.Window.Library.Theme.Text,
+                    TextSize = 12 * self.Window.Library.Scale,
+                    ZIndex = 101,
+                    Parent = optionsFrame
+                })
+                
+                optionButton.MouseEnter:Connect(function()
+                    optionButton.BackgroundTransparency = 0.9
+                    optionButton.BackgroundColor3 = self.Window.Library.Theme.Primary
+                end)
+                
+                optionButton.MouseLeave:Connect(function()
+                    optionButton.BackgroundTransparency = 1
+                end)
+                
+                optionButton.MouseButton1Click:Connect(function()
+                    currentValue = option
+                    label.Text = text .. ": " .. option
+                    
+                    isOpen = false
+                    optionsFrame.Visible = false
+                    dropdownButton.Text = "▼"
+                    dropdownFrame.Size = UDim2.new(1, 0, 0, 40 * self.Window.Library.Scale)
+                    
+                    if callback then callback(option) end
+                end)
+            end
+            
+            dropdownButton.MouseButton1Click:Connect(function()
+                isOpen = not isOpen
+                
+                if isOpen then
+                    dropdownFrame.Size = UDim2.new(1, 0, 0, (40 + #options * 30) * self.Window.Library.Scale)
+                    optionsFrame.Visible = true
+                    dropdownButton.Text = "▲"
+                else
+                    dropdownFrame.Size = UDim2.new(1, 0, 0, 40 * self.Window.Library.Scale)
+                    optionsFrame.Visible = false
+                    dropdownButton.Text = "▼"
+                end
+            end)
+            
+            table.insert(self.Elements, dropdownFrame)
+            return {
+                Frame = dropdownFrame,
+                SetValue = function(value)
+                    if table.find(options, value) then
+                        currentValue = value
+                        label.Text = text .. ": " .. value
+                    end
+                end,
+                GetValue = function()
+                    return currentValue
+                end
+            }
+        end
+        
+        function tab:CreateTextbox(text, placeholder, callback)
+            local textboxFrame = Utils.Create("Frame", {
+                Name = "TextboxFrame",
+                BackgroundColor3 = self.Window.Library.Theme.Secondary,
+                Size = UDim2.new(1, 0, 0, 70 * self.Window.Library.Scale),
+                Parent = self.ScrollFrame
+            })
+            
+            Utils.CreateCorner(textboxFrame, 8)
+            
+            local label = Utils.Create("TextLabel", {
+                Name = "Label",
+                BackgroundTransparency = 1,
+                Position = UDim2.new(0, 15 * self.Window.Library.Scale, 0, 5 * self.Window.Library.Scale),
+                Size = UDim2.new(1, -30 * self.Window.Library.Scale, 0, 20 * self.Window.Library.Scale),
+                Font = Enum.Font.Gotham,
+                Text = text,
+                TextColor3 = self.Window.Library.Theme.Text,
+                TextSize = 14 * self.Window.Library.Scale,
+                TextXAlignment = Enum.TextXAlignment.Left,
+                Parent = textboxFrame
+            })
+            
+            local textbox = Utils.Create("TextBox", {
+                Name = "Textbox",
+                BackgroundColor3 = self.Window.Library.Theme.Background,
+                Position = UDim2.new(0, 15 * self.Window.Library.Scale, 0, 30 * self.Window.Library.Scale),
+                Size = UDim2.new(1, -30 * self.Window.Library.Scale, 0, 30 * self.Window.Library.Scale),
+                Font = Enum.Font.Gotham,
+                PlaceholderText = placeholder or "Enter text...",
+                PlaceholderColor3 = self.Window.Library.Theme.TextSecondary,
+                Text = "",
+                TextColor3 = self.Window.Library.Theme.Text,
+                TextSize = 12 * self.Window.Library.Scale,
+                TextXAlignment = Enum.TextXAlignment.Left,
+                ClearTextOnFocus = false,
+                Parent = textboxFrame
+            })
+            
+            Utils.CreateCorner(textbox, 6)
+            Utils.CreateStroke(textbox, 1, self.Window.Library.Theme.Border, 0.5)
+            
+            Utils.Create("UIPadding", {
+                PaddingLeft = UDim.new(0, 10 * self.Window.Library.Scale),
+                PaddingRight = UDim.new(0, 10 * self.Window.Library.Scale),
+                Parent = textbox
+            })
+            
+            textbox.FocusLost:Connect(function(enterPressed)
+                if callback then callback(textbox.Text, enterPressed) end
+            end)
+            
+            table.insert(self.Elements, textboxFrame)
+            return {
+                Frame = textboxFrame,
+                SetText = function(newText)
+                    textbox.Text = newText
+                end,
+                GetText = function()
+                    return textbox.Text
+                end
+            }
+        end
         
         return tab
     end
@@ -1130,6 +1548,7 @@ function ProfessionalUI:SetTheme(themeName)
     if Themes[themeName] then
         self.Theme = Themes[themeName]
         self:UpdateTheme()
+        self:UpdateToggleUI()
     end
 end
 
@@ -1156,6 +1575,21 @@ function ProfessionalUI:UpdateTheme()
     end
 end
 
+function ProfessionalUI:UpdateToggleUI()
+    if self.ToggleUI then
+        self.ToggleUI.BackgroundColor3 = self.Theme.Surface
+        local stroke = self.ToggleUI:FindFirstChild("UIStroke")
+        if stroke then
+            stroke.Color = self.Theme.Primary
+        end
+        
+        local toggleButton = self.ToggleUI:FindFirstChild("ToggleButton")
+        if toggleButton then
+            toggleButton.TextColor3 = self.Theme.Primary
+        end
+    end
+end
+
 -- Cleanup
 function ProfessionalUI:Destroy()
     if self.ScreenGui then
@@ -1164,6 +1598,7 @@ function ProfessionalUI:Destroy()
     
     self.Windows = {}
     self.Notifications = {}
+    self.ToggleUI = nil
 end
 
 -- Set global variables and mark as loaded
