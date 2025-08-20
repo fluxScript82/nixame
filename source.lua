@@ -6,7 +6,7 @@
     local ProfessionalUI = loadstring(game:HttpGet("https://raw.githubusercontent.com/username/ProfessionalUI/main/main.lua"))()
     
     Author: Professional UI Team
-    Version: 4.3 (Fixed Toggle UI Edition)
+    Version: 4.2 (Universal Edition)
 ]]
 
 -- Prevent multiple loads
@@ -30,7 +30,7 @@ local ProfessionalUI = {}
 ProfessionalUI.__index = ProfessionalUI
 
 -- Version info
-ProfessionalUI.Version = "4.3"
+ProfessionalUI.Version = "4.2"
 ProfessionalUI.Author = "Professional UI Team"
 
 -- Utility Functions
@@ -159,21 +159,8 @@ function Utils.MakeDraggable(frame, dragHandle)
                 startPos.Y.Offset + delta.Y
             )
             
-            -- Apply the new position with screen bounds checking
-            local viewport = workspace.CurrentCamera.ViewportSize
-            local frameSize = frame.AbsoluteSize
-            
-            -- Calculate constraints
-            local minX = 0
-            local maxX = viewport.X - frameSize.X
-            local minY = 0
-            local maxY = viewport.Y - frameSize.Y
-            
-            -- Apply constraints
-            local constrainedX = math.clamp(newPosition.X.Offset, minX, maxX)
-            local constrainedY = math.clamp(newPosition.Y.Offset, minY, maxY)
-            
-            frame.Position = UDim2.new(0, constrainedX, 0, constrainedY)
+            -- Apply the new position directly (remove constraints for now to test)
+            frame.Position = newPosition
         end
     end)
     
@@ -328,90 +315,90 @@ function ProfessionalUI.new(options)
     print("📖 Created by " .. ProfessionalUI.Author)
     print("🆔 Instance ID: " .. self.Id)
     print("📱 Universal dragging enabled for all devices")
-    print("🎮 Draggable toggle UI created - Drag to move, tap to toggle")
+    print("🎮 Compact toggle UI created - Drag to move, tap to toggle")
     
     return self
 end
 
--- Create Draggable Toggle UI
+-- Create Compact Toggle UI
 function ProfessionalUI:CreateToggleUI()
-    -- Main toggle frame (draggable and compact)
+    -- Main toggle frame (smaller and more compact)
     self.ToggleUI = Utils.Create("Frame", {
         Name = "ToggleUI",
         AnchorPoint = Vector2.new(0, 0.5),
         BackgroundColor3 = self.Theme.Surface,
         Position = UDim2.new(0, 10, 0.5, 0),
-        Size = UDim2.new(0, 50, 0, 50), -- Slightly larger for better touch
+        Size = UDim2.new(0, 45, 0, 45), -- Smaller size
         Parent = self.ScreenGui,
         ZIndex = 1000
     })
     
-    Utils.CreateCorner(self.ToggleUI, 25) -- Circular
-    Utils.CreateShadow(self.ToggleUI, 15, 0.6)
+    Utils.CreateCorner(self.ToggleUI, 22) -- More circular
+    Utils.CreateShadow(self.ToggleUI, 12, 0.6)
     Utils.CreateStroke(self.ToggleUI, 2, self.Theme.Primary, 0)
     
-    -- Make the entire toggle UI draggable
-    Utils.MakeDraggable(self.ToggleUI)
-    
-    -- Toggle button (clickable area)
+    -- Toggle button
     local toggleButton = Utils.Create("TextButton", {
         Name = "ToggleButton",
         BackgroundTransparency = 1,
         Size = UDim2.new(1, 0, 1, 0),
         Font = Enum.Font.GothamBold,
-        Text = "⚡", -- Lightning bolt icon
+        Text = "⚡", -- More compact icon
         TextColor3 = self.Theme.Primary,
-        TextSize = 20,
+        TextSize = 18, -- Smaller text
         Parent = self.ToggleUI,
         ZIndex = 1001
     })
     
-    -- Status indicator (shows if UI is open/closed)
+    -- Smaller status indicator
     local statusIndicator = Utils.Create("Frame", {
         Name = "StatusIndicator",
         AnchorPoint = Vector2.new(1, 0),
         BackgroundColor3 = self.Theme.Success,
         Position = UDim2.new(1, -3, 0, 3),
-        Size = UDim2.new(0, 10, 0, 10),
+        Size = UDim2.new(0, 8, 0, 8), -- Smaller indicator
         Parent = self.ToggleUI,
         ZIndex = 1002
     })
     
-    Utils.CreateCorner(statusIndicator, 5)
+    Utils.CreateCorner(statusIndicator, 4)
     
-    -- Toggle functionality with proper event handling
-    local function toggleInterface()
+    -- Make toggle UI draggable (works on all devices)
+    Utils.MakeDraggable(self.ToggleUI)
+    
+    -- Toggle functionality
+    toggleButton.MouseButton1Click:Connect(function()
         self:ToggleVisibility()
-    end
+    end)
     
-    -- Mouse and touch support
-    toggleButton.MouseButton1Click:Connect(toggleInterface)
+    -- Touch support for mobile
+    toggleButton.TouchTap:Connect(function()
+        self:ToggleVisibility()
+    end)
     
-    -- Additional touch support for mobile
-    if UserInputService.TouchEnabled then
-        toggleButton.TouchTap:Connect(toggleInterface)
-    end
-    
-    -- Visual feedback on hover/touch
+    -- Hover/Touch effects
     local function onHover()
-        Utils.Tween(self.ToggleUI, {Size = UDim2.new(0, 55, 0, 55)}, 0.2)
-        Utils.Tween(toggleButton, {TextSize = 22}, 0.2)
+        Utils.Tween(self.ToggleUI, {Size = UDim2.new(0, 50, 0, 50)}, 0.2)
+        Utils.Tween(toggleButton, {TextSize = 20}, 0.2)
     end
     
     local function onLeave()
-        Utils.Tween(self.ToggleUI, {Size = UDim2.new(0, 50, 0, 50)}, 0.2)
-        Utils.Tween(toggleButton, {TextSize = 20}, 0.2)
+        Utils.Tween(self.ToggleUI, {Size = UDim2.new(0, 45, 0, 45)}, 0.2)
+        Utils.Tween(toggleButton, {TextSize = 18}, 0.2)
     end
     
     toggleButton.MouseEnter:Connect(onHover)
     toggleButton.MouseLeave:Connect(onLeave)
     
-    -- Pulse animation for status indicator
+    -- Touch equivalents for mobile
+    toggleButton.TouchLongPress:Connect(onHover)
+    
+    -- Subtle pulse animation for status indicator
     spawn(function()
         while self.ToggleUI and self.ToggleUI.Parent do
-            Utils.Tween(statusIndicator, {Size = UDim2.new(0, 12, 0, 12)}, 1.5)
-            wait(1.5)
             Utils.Tween(statusIndicator, {Size = UDim2.new(0, 10, 0, 10)}, 1.5)
+            wait(1.5)
+            Utils.Tween(statusIndicator, {Size = UDim2.new(0, 8, 0, 8)}, 1.5)
             wait(1.5)
         end
     end)
@@ -419,7 +406,7 @@ function ProfessionalUI:CreateToggleUI()
     return self.ToggleUI
 end
 
--- Fixed Toggle Visibility Function
+-- Toggle Visibility
 function ProfessionalUI:ToggleVisibility()
     self.Visible = not self.Visible
     
@@ -427,78 +414,47 @@ function ProfessionalUI:ToggleVisibility()
     local statusIndicator = self.ToggleUI:FindFirstChild("StatusIndicator")
     
     if self.Visible then
-        -- Show all windows with proper positioning and visibility
+        -- Show all windows with proper centering
         for _, window in ipairs(self.Windows) do
-            if window.Frame then
-                -- Make sure the window is visible first
-                window.Frame.Visible = true
-                
-                -- Ensure window is properly centered
-                local windowWidth = window.Size.X.Offset
-                local windowHeight = window.Size.Y.Offset
-                window.Frame.Position = UDim2.new(0.5, -windowWidth/2, 0.5, -windowHeight/2)
-                
-                -- Animate the window appearing
-                window.Frame.Size = UDim2.new(0, 0, 0, 0)
-                Utils.Tween(window.Frame, {Size = window.Size}, 0.4, Enum.EasingStyle.Back, Enum.EasingDirection.Out)
-            end
+            window.Frame.Visible = true
+            
+            -- Ensure window is centered
+            local windowWidth = window.Size.X.Offset
+            local windowHeight = window.Size.Y.Offset
+            window.Frame.Position = UDim2.new(0.5, -windowWidth/2, 0.5, -windowHeight/2)
+            
+            Utils.Tween(window.Frame, {Size = window.Size}, 0.3, Enum.EasingStyle.Back, Enum.EasingDirection.Out)
         end
         
         -- Show notifications
-        if self.NotificationContainer then
-            self.NotificationContainer.Visible = true
-        end
+        self.NotificationContainer.Visible = true
         
-        -- Update toggle UI appearance
-        if toggleButton then
-            toggleButton.Text = "⚡"
-            toggleButton.TextColor3 = self.Theme.Primary
-        end
-        
-        if statusIndicator then
-            statusIndicator.BackgroundColor3 = self.Theme.Success
-        end
-        
+        -- Update toggle UI
+        toggleButton.Text = "⚡"
+        statusIndicator.BackgroundColor3 = self.Theme.Success
         Utils.Tween(self.ToggleUI, {BackgroundColor3 = self.Theme.Surface}, 0.2)
         
-        -- Show success notification
         self:CreateNotification({
             title = "Interface Opened",
-            text = "Professional UI is now visible and ready to use!",
+            text = "Professional UI is now visible and centered",
             type = "success",
-            duration = 3
+            duration = 2
         })
-        
-        print("✅ Interface opened - All windows should now be visible and centered")
-        
     else
-        -- Hide all windows with animation
+        -- Hide all windows
         for _, window in ipairs(self.Windows) do
-            if window.Frame then
-                Utils.Tween(window.Frame, {Size = UDim2.new(0, 0, 0, 0)}, 0.3, nil, nil, function()
-                    window.Frame.Visible = false
-                end)
-            end
+            Utils.Tween(window.Frame, {Size = UDim2.new(0, 0, 0, 0)}, 0.3, nil, nil, function()
+                window.Frame.Visible = false
+            end)
         end
         
         -- Hide notifications
-        if self.NotificationContainer then
-            self.NotificationContainer.Visible = false
-        end
+        self.NotificationContainer.Visible = false
         
-        -- Update toggle UI appearance
-        if toggleButton then
-            toggleButton.Text = "▶"
-            toggleButton.TextColor3 = self.Theme.TextSecondary
-        end
-        
-        if statusIndicator then
-            statusIndicator.BackgroundColor3 = self.Theme.Warning
-        end
-        
+        -- Update toggle UI
+        toggleButton.Text = "▶"
+        statusIndicator.BackgroundColor3 = self.Theme.Warning
         Utils.Tween(self.ToggleUI, {BackgroundColor3 = self.Theme.Secondary}, 0.2)
-        
-        print("❌ Interface hidden - Use toggle button to show again")
     end
 end
 
@@ -698,16 +654,18 @@ function ProfessionalUI:CreateKeySystem(options)
         })
         
         local saveKeyEnabled = false
-        local function toggleCheckbox()
+        saveKeyCheckbox.MouseButton1Click:Connect(function()
             saveKeyEnabled = not saveKeyEnabled
             checkmark.Text = saveKeyEnabled and "✓" or ""
             saveKeyCheckbox.BackgroundColor3 = saveKeyEnabled and self.Theme.Primary or self.Theme.Secondary
-        end
+        end)
         
-        saveKeyCheckbox.MouseButton1Click:Connect(toggleCheckbox)
-        if UserInputService.TouchEnabled then
-            saveKeyCheckbox.TouchTap:Connect(toggleCheckbox)
-        end
+        -- Touch support
+        saveKeyCheckbox.TouchTap:Connect(function()
+            saveKeyEnabled = not saveKeyEnabled
+            checkmark.Text = saveKeyEnabled and "✓" or ""
+            saveKeyCheckbox.BackgroundColor3 = saveKeyEnabled and self.Theme.Primary or self.Theme.Secondary
+        end)
     end
     
     -- Submit button
@@ -759,7 +717,7 @@ function ProfessionalUI:CreateKeySystem(options)
     local function submitKey()
         local inputKey = keyInput.Text
         if inputKey == keySystem.Key then
-            statusLabel.Text = "Key accepted! Loading interface..."
+            statusLabel.Text = "Key accepted! Loading..."
             statusLabel.TextColor3 = self.Theme.Success
             
             -- Save key if enabled
@@ -774,25 +732,18 @@ function ProfessionalUI:CreateKeySystem(options)
             
             Utils.Tween(keyFrame, {Size = UDim2.new(0, 0, 0, 0)}, 0.3, nil, nil, function()
                 keyFrame:Destroy()
+                self:Show() -- Show main interface
                 
-                -- Show main interface and ensure it's visible
-                self:Show()
-                
-                -- Double-check that all windows are properly positioned and visible
-                task.wait(0.1) -- Small delay to ensure everything is ready
+                -- Ensure all windows are properly centered after showing
                 for _, window in ipairs(self.Windows) do
                     if window.Frame then
-                        window.Frame.Visible = true
                         local windowWidth = window.Size.X.Offset
                         local windowHeight = window.Size.Y.Offset
                         window.Frame.Position = UDim2.new(0.5, -windowWidth/2, 0.5, -windowHeight/2)
-                        window.Frame.Size = window.Size
                     end
                 end
                 
                 keySystem.Callback()
-                
-                print("🎉 Key accepted! Main interface should now be visible and centered.")
             end)
         else
             statusLabel.Text = "Invalid key! Please try again."
@@ -808,7 +759,11 @@ function ProfessionalUI:CreateKeySystem(options)
         end
     end
     
-    local function getKey()
+    submitButton.MouseButton1Click:Connect(submitKey)
+    submitButton.TouchTap:Connect(submitKey)
+    
+    getKeyButton.MouseButton1Click:Connect(function()
+        -- Copy key link to clipboard (if supported)
         if setclipboard then
             setclipboard(keySystem.KeyLink)
             statusLabel.Text = "Key link copied to clipboard!"
@@ -817,25 +772,32 @@ function ProfessionalUI:CreateKeySystem(options)
             statusLabel.Text = "Key link: " .. keySystem.KeyLink
             statusLabel.TextColor3 = self.Theme.TextSecondary
         end
-    end
+    end)
     
-    local function closeKeySystem()
+    getKeyButton.TouchTap:Connect(function()
+        if setclipboard then
+            setclipboard(keySystem.KeyLink)
+            statusLabel.Text = "Key link copied to clipboard!"
+            statusLabel.TextColor3 = self.Theme.Success
+        else
+            statusLabel.Text = "Key link: " .. keySystem.KeyLink
+            statusLabel.TextColor3 = self.Theme.TextSecondary
+        end
+    end)
+    
+    closeButton.MouseButton1Click:Connect(function()
         Utils.Tween(keyFrame, {Size = UDim2.new(0, 0, 0, 0)}, 0.3, nil, nil, function()
             keyFrame:Destroy()
             keySystem.CloseCallback()
         end)
-    end
+    end)
     
-    -- Connect events with touch support
-    submitButton.MouseButton1Click:Connect(submitKey)
-    getKeyButton.MouseButton1Click:Connect(getKey)
-    closeButton.MouseButton1Click:Connect(closeKeySystem)
-    
-    if UserInputService.TouchEnabled then
-        submitButton.TouchTap:Connect(submitKey)
-        getKeyButton.TouchTap:Connect(getKey)
-        closeButton.TouchTap:Connect(closeKeySystem)
-    end
+    closeButton.TouchTap:Connect(function()
+        Utils.Tween(keyFrame, {Size = UDim2.new(0, 0, 0, 0)}, 0.3, nil, nil, function()
+            keyFrame:Destroy()
+            keySystem.CloseCallback()
+        end)
+    end)
     
     -- Enter key support
     keyInput.FocusLost:Connect(function(enterPressed)
@@ -868,7 +830,6 @@ function ProfessionalUI:CreateWindow(title, size)
         BackgroundColor3 = self.Theme.Surface,
         Position = UDim2.new(0.5, -windowWidth/2, 0.5, -windowHeight/2), -- Center the window
         Size = window.Size,
-        Visible = self.Visible, -- Respect current visibility state
         Parent = self.ScreenGui,
         ZIndex = 10
     })
@@ -999,6 +960,9 @@ function ProfessionalUI:CreateWindow(title, size)
         end
     end
     
+    minimizeButton.MouseButton1Click:Connect(toggleMinimize)
+    minimizeButton.TouchTap:Connect(toggleMinimize)
+    
     local function closeWindow()
         Utils.Tween(window.Frame, {Size = UDim2.new(0, 0, 0, 0)}, 0.3, nil, nil, function()
             window.Frame:Destroy()
@@ -1011,14 +975,8 @@ function ProfessionalUI:CreateWindow(title, size)
         end)
     end
     
-    -- Connect events with touch support
-    minimizeButton.MouseButton1Click:Connect(toggleMinimize)
     closeButton.MouseButton1Click:Connect(closeWindow)
-    
-    if UserInputService.TouchEnabled then
-        minimizeButton.TouchTap:Connect(toggleMinimize)
-        closeButton.TouchTap:Connect(closeWindow)
-    end
+    closeButton.TouchTap:Connect(closeWindow)
     
     -- Tab creation function
     function window:CreateTab(name, icon)
@@ -1086,9 +1044,7 @@ function ProfessionalUI:CreateWindow(title, size)
         end
         
         tab.Button.MouseButton1Click:Connect(selectTab)
-        if UserInputService.TouchEnabled then
-            tab.Button.TouchTap:Connect(selectTab)
-        end
+        tab.Button.TouchTap:Connect(selectTab)
         
         -- Set as active if first tab
         if #self.Tabs == 0 then
@@ -1100,7 +1056,7 @@ function ProfessionalUI:CreateWindow(title, size)
         
         table.insert(self.Tabs, tab)
         
-        -- Element creation functions
+        -- Element creation functions (same as before but with touch support)
         function tab:CreateLabel(text)
             local label = Utils.Create("TextLabel", {
                 Name = "Label",
@@ -1150,9 +1106,7 @@ function ProfessionalUI:CreateWindow(title, size)
             end
             
             button.MouseButton1Click:Connect(onClick)
-            if UserInputService.TouchEnabled then
-                button.TouchTap:Connect(onClick)
-            end
+            button.TouchTap:Connect(onClick)
             
             table.insert(self.Elements, button)
             return button
@@ -1220,9 +1174,7 @@ function ProfessionalUI:CreateWindow(title, size)
             end
             
             toggleButton.MouseButton1Click:Connect(toggle)
-            if UserInputService.TouchEnabled then
-                toggleButton.TouchTap:Connect(toggle)
-            end
+            toggleButton.TouchTap:Connect(toggle)
             
             table.insert(self.Elements, toggleFrame)
             return {
@@ -1237,6 +1189,8 @@ function ProfessionalUI:CreateWindow(title, size)
                 end
             }
         end
+        
+        -- Additional element functions would continue here with touch support...
         
         return tab
     end
@@ -1381,9 +1335,7 @@ function ProfessionalUI:CreateNotification(options)
     end
     
     closeButton.MouseButton1Click:Connect(closeNotification)
-    if UserInputService.TouchEnabled then
-        closeButton.TouchTap:Connect(closeNotification)
-    end
+    closeButton.TouchTap:Connect(closeNotification)
     
     table.insert(self.Notifications, notification)
     return notification
