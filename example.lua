@@ -1,11 +1,11 @@
 --[[
-    Professional UI Library - Loadstring Example
+    Professional UI Library - Enhanced Example with Toggle UI
     
-    This demonstrates how to use the library when loaded via loadstring
+    This demonstrates the new draggable functionality and toggle UI
 ]]
 
 -- Load the library via loadstring (replace with your actual URL)
-local ProfessionalUI = loadstring(game:HttpGet("https://raw.githubusercontent.com/fluxScript82/nixame/refs/heads/main/source.lua"))()
+local ProfessionalUI = loadstring(game:HttpGet("https://raw.githubusercontent.com/username/ProfessionalUI/main/main.lua"))()
 
 -- Create the UI instance
 local UI = ProfessionalUI.new({
@@ -32,7 +32,7 @@ end
 
 -- Create the main interface
 local function createMainInterface()
-    -- Create main window
+    -- Create main window (now draggable!)
     local mainWindow = UI:CreateWindow("Professional Script Hub", UDim2.new(0, 650, 0, 450))
     
     -- Create tabs
@@ -43,21 +43,35 @@ local function createMainInterface()
     
     -- Home Tab
     homeTab:CreateLabel("Welcome to Professional Script Hub!")
-    homeTab:CreateLabel("Your premium scripting solution for Roblox")
+    homeTab:CreateLabel("🎮 Use the toggle UI on the left to show/hide this interface")
+    homeTab:CreateLabel("🖱️ Drag windows by their title bars to move them around")
+    
+    homeTab:CreateButton("Test Toggle UI", function()
+        UI:ToggleVisibility()
+        task.wait(2)
+        UI:ToggleVisibility()
+        UI:CreateNotification({
+            title = "Toggle Test",
+            text = "Toggle UI functionality demonstrated!",
+            type = "success",
+            duration = 3
+        })
+    end)
     
     homeTab:CreateButton("Show Welcome Message", function()
         UI:CreateNotification({
             title = "Welcome!",
-            text = "Thanks for using Professional Script Hub. Enjoy premium features!",
+            text = "Thanks for using Professional Script Hub with enhanced features!",
             type = "success",
             duration = 4
         })
     end)
     
-    homeTab:CreateButton("Check Status", function()
+    homeTab:CreateButton("Hide Interface", function()
+        UI:Hide()
         UI:CreateNotification({
-            title = "System Status",
-            text = "All systems operational. Ready for scripting!",
+            title = "Interface Hidden",
+            text = "Click the toggle UI to show the interface again",
             type = "info",
             duration = 3
         })
@@ -65,6 +79,7 @@ local function createMainInterface()
     
     -- Scripts Tab
     scriptsTab:CreateLabel("Available Scripts")
+    scriptsTab:CreateLabel("All scripts are now in draggable windows!")
     
     scriptsTab:CreateButton("Universal ESP", function()
         UI:CreateNotification({
@@ -78,36 +93,40 @@ local function createMainInterface()
     end)
     
     scriptsTab:CreateButton("Speed Hack", function()
-        local speedEnabled = false
-        speedEnabled = not speedEnabled
-        
-        if speedEnabled then
-            game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = 50
-            UI:CreateNotification({
-                title = "Speed Hack",
-                text = "Speed increased to 50!",
-                type = "success",
-                duration = 2
-            })
-        else
-            game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = 16
-            UI:CreateNotification({
-                title = "Speed Hack",
-                text = "Speed reset to normal",
-                type = "info",
-                duration = 2
-            })
+        local player = game.Players.LocalPlayer
+        if player.Character and player.Character:FindFirstChild("Humanoid") then
+            local currentSpeed = player.Character.Humanoid.WalkSpeed
+            if currentSpeed == 16 then
+                player.Character.Humanoid.WalkSpeed = 50
+                UI:CreateNotification({
+                    title = "Speed Hack",
+                    text = "Speed increased to 50!",
+                    type = "success",
+                    duration = 2
+                })
+            else
+                player.Character.Humanoid.WalkSpeed = 16
+                UI:CreateNotification({
+                    title = "Speed Hack",
+                    text = "Speed reset to normal",
+                    type = "info",
+                    duration = 2
+                })
+            end
         end
     end)
     
     scriptsTab:CreateButton("Jump Power", function()
-        game.Players.LocalPlayer.Character.Humanoid.JumpPower = 100
-        UI:CreateNotification({
-            title = "Jump Power",
-            text = "Jump power increased to 100!",
-            type = "success",
-            duration = 2
-        })
+        local player = game.Players.LocalPlayer
+        if player.Character and player.Character:FindFirstChild("Humanoid") then
+            player.Character.Humanoid.JumpPower = 100
+            UI:CreateNotification({
+                title = "Jump Power",
+                text = "Jump power increased to 100!",
+                type = "success",
+                duration = 2
+            })
+        end
     end)
     
     local autoFarmToggle = scriptsTab:CreateToggle("Auto Farm", false, function(value)
@@ -131,8 +150,16 @@ local function createMainInterface()
         end
     end)
     
+    local speedSlider = scriptsTab:CreateSlider("Walk Speed", 16, 100, 16, function(value)
+        local player = game.Players.LocalPlayer
+        if player.Character and player.Character:FindFirstChild("Humanoid") then
+            player.Character.Humanoid.WalkSpeed = value
+        end
+    end)
+    
     -- Settings Tab
     settingsTab:CreateLabel("Theme Settings")
+    settingsTab:CreateLabel("Choose your preferred theme:")
     
     local themes = {"Dark", "Light", "Purple", "Red", "Green", "Cyberpunk"}
     for _, themeName in ipairs(themes) do
@@ -169,7 +196,7 @@ local function createMainInterface()
         })
     end)
     
-    settingsTab:CreateLabel("Script Settings")
+    settingsTab:CreateLabel("Interface Settings")
     
     local notificationsToggle = settingsTab:CreateToggle("Enable Notifications", true, function(value)
         print("Notifications:", value and "enabled" or "disabled")
@@ -179,9 +206,14 @@ local function createMainInterface()
         print("Auto execute:", value and "enabled" or "disabled")
     end)
     
+    local uiScaleSlider = settingsTab:CreateSlider("UI Scale", 50, 150, 100, function(value)
+        print("UI Scale:", value .. "%")
+        -- You could implement UI scaling here
+    end)
+    
     -- Premium Tab
     premiumTab:CreateLabel("Premium Features")
-    premiumTab:CreateLabel("Unlock exclusive scripts and features!")
+    premiumTab:CreateLabel("Unlock exclusive scripts and enhanced functionality!")
     
     premiumTab:CreateButton("Premium Script 1", function()
         UI:CreateNotification({
@@ -201,6 +233,26 @@ local function createMainInterface()
             duration = 3
         })
         -- Your premium script here
+    end)
+    
+    premiumTab:CreateButton("Advanced Features", function()
+        -- Create a second window to demonstrate multiple draggable windows
+        local advancedWindow = UI:CreateWindow("Advanced Features", UDim2.new(0, 400, 0, 300))
+        local advancedTab = advancedWindow:CreateTab("Advanced", "🚀")
+        
+        advancedTab:CreateLabel("This is a second draggable window!")
+        advancedTab:CreateLabel("You can have multiple windows open at once.")
+        
+        advancedTab:CreateButton("Close This Window", function()
+            advancedWindow.Frame:Destroy()
+        end)
+        
+        UI:CreateNotification({
+            title = "Advanced Window",
+            text = "Created a second draggable window!",
+            type = "success",
+            duration = 3
+        })
     end)
     
     premiumTab:CreateButton("Get Premium", function()
@@ -225,9 +277,18 @@ local function createMainInterface()
     -- Show welcome notification
     UI:CreateNotification({
         title = "Professional Script Hub Loaded",
-        text = "All features are now available. Welcome to the premium experience!",
+        text = "Enhanced version with draggable windows and toggle UI!",
         type = "success",
         duration = 5
+    })
+    
+    -- Demonstrate toggle UI after a delay
+    task.wait(3)
+    UI:CreateNotification({
+        title = "Toggle UI Available",
+        text = "Use the UI button on the left to show/hide the interface!",
+        type = "info",
+        duration = 4
     })
 end
 
@@ -239,6 +300,7 @@ end
 createMainInterface()
 
 -- Print success message
-print("🚀 Professional Script Hub loaded successfully!")
+print("🚀 Professional Script Hub Enhanced loaded successfully!")
 print("📖 Version: " .. ProfessionalUI.Version)
 print("👨‍💻 Created by: " .. ProfessionalUI.Author)
+print("🎮 Features: Draggable windows, Toggle UI, Enhanced UX")
