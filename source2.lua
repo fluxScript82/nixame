@@ -86,7 +86,7 @@ local function CreateSpring(object, properties, duration)
 end
 
 local function MakeDraggable(frame, dragHandle)
-    local dragging = false
+    local dragging = true
     local dragStart = nil
     local startPos = nil
     local dragConnection = nil
