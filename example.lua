@@ -1,6 +1,6 @@
 -- Example usage of the UI Library
 
-local UILibrary = require(script.UILibrary)
+local UILibrary = require(https://raw.githubusercontent.com/fluxScript82/nixame/refs/heads/main/source.lua)
 
 -- Create the UI Library instance
 local UI = UILibrary.new({
