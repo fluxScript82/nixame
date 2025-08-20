@@ -1,6 +1,6 @@
 -- COMPLETE EXAMPLE WITH ALL FEATURES
 -- Load the library
-local ProfessionalUI = loadstring(game:HttpGet("https://raw.githubusercontent.com/fluxScript82/nixame/main/source.lua"))()
+local ProfessionalUI = loadstring(game:HttpGet("https://raw.githubusercontent.com/fluxScript82/nixame/refs/heads/main/xample"))()
 
 -- Create notifications
 ProfessionalUI:CreateNotification({
