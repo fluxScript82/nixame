@@ -1,78 +1,80 @@
--- Example usage of Professional UI Library v3.0
--- Load with: local ProfessionalUI = loadstring(game:HttpGet("https://raw.githubusercontent.com/fluxScript82/nixame/main/source.lua"))()
+--[[
+    Example usage of the Professional UI Library
+    Load via: local ProfessionalUI = loadstring(game:HttpGet("https://raw.githubusercontent.com/fluxScript82/nixame/refs/heads/main/source2.lua"))()
+]]
 
-local ProfessionalUI = require(script.Parent.ProfessionalUI_v3) -- For testing
+local ProfessionalUI = loadstring(game:HttpGet("https://raw.githubusercontent.com/fluxScript82/nixame/refs/heads/main/source2.lua"))()
+if not ProfessionalUI then
+    warn("Failed to load Professional UI Library.")
+    return
+end
 
--- Create enhanced key system
-local keySystem = ProfessionalUI:CreateKeySystem({
-    Title = "Professional UI v3.0",
-    Subtitle = "Advanced Authentication",
-    Description = "Enter your premium access key to unlock all features",
-    Key = "ProfessionalUI_v3_2024",
-    KeyLink = "https://example.com/getkey-v3",
-    Theme = "Dark", -- Can be "Dark", "Light", or "Purple"
+-- Key System (Optional)
+ProfessionalUI:CreateKeySystem({
+    Title = "Professional UI - Key System",
+    Description = "Enter your key to access the UI",
+    Key = "ProfessionalUI2024",
+    KeyLink = "https://example.com/getkey",
     Callback = function()
-        print("🔓 Access granted! Loading Professional UI v3.0...")
-        
-        -- Create main window with enhanced features
+        print("Key accepted! Loading main UI...")
+
+        -- Create main window after key verification
         local Window = ProfessionalUI:CreateWindow({
-            Title = "Professional UI Library v3.0",
-            Size = Vector2.new(700, 500),
+            Title = "Professional UI Library",
+            Size = Vector2.new(600, 400),
             Theme = "Dark",
-            Draggable = true,
-            MinimizeToTray = true
+            Draggable = true
         })
-        
+
         -- Create Main Tab
         local MainTab = Window:CreateTab({
-            Name = "🏠 Main",
+            Name = "Main",
             Icon = nil
         })
-        
+
+        -- Add elements to Main tab
+        MainTab:CreateLabel({
+            Text = "Welcome to Professional UI Library!"
+        })
+
         MainTab:CreateButton({
-            Text = "🚀 Launch Feature",
+            Text = "Test Button",
             Callback = function()
-                print("Feature launched!")
+                print("Button clicked!")
             end
         })
-        
-        -- Create Combat Tab
-        local CombatTab = Window:CreateTab({
-            Name = "⚔️ Combat"
+
+        MainTab:CreateToggle({
+            Text = "Auto Farm",
+            Default = false,
+            Callback = function(value)
+                print("Auto Farm:", value)
+            end
         })
-        
-        -- Create Settings Tab
-        local SettingsTab = Window:CreateTab({
-            Name = "⚙️ Settings"
+
+        MainTab:CreateSlider({
+            Text = "Walk Speed",
+            Min = 16,
+            Max = 100,
+            Default = 16,
+            Callback = function(value)
+                print("Walk Speed:", value)
+                local char = game.Players.LocalPlayer.Character
+                if char and char:FindFirstChildOfClass("Humanoid") then
+                    char:FindFirstChildOfClass("Humanoid").WalkSpeed = value
+                end
+            end
         })
-        
-        -- Create Info Tab
-        local InfoTab = Window:CreateTab({
-            Name = "ℹ️ Info"
+
+        MainTab:CreateDropdown({
+            Text = "Teleport Location",
+            Options = {"Spawn", "Shop", "Boss Arena", "Secret Area"},
+            Default = "Spawn",
+            Callback = function(option)
+                print("Selected location:", option)
+                -- Add teleport functionality here if needed
+            end
         })
-        
-        print("✅ Professional UI v3.0 loaded successfully!")
+
     end
 })
-
--- Alternative: Skip key system and load directly
---[[
-local Window = ProfessionalUI:CreateWindow({
-    Title = "Professional UI v3.0 - Direct Access",
-    Size = Vector2.new(650, 450),
-    Theme = "Purple", -- Try different themes!
-    Draggable = true,
-    MinimizeToTray = true
-})
-
-local TestTab = Window:CreateTab({
-    Name = "Test Tab"
-})
-
-TestTab:CreateButton({
-    Text = "Test Button",
-    Callback = function()
-        print("Hello from Professional UI v3.0!")
-    end
-})
---]]
