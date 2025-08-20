@@ -159,21 +159,8 @@ function Utils.MakeDraggable(frame, dragHandle)
                 startPos.Y.Offset + delta.Y
             )
             
-            -- Constrain to screen bounds
-            local viewport = workspace.CurrentCamera.ViewportSize
-            local frameSize = frame.AbsoluteSize
-            
-            -- Calculate constraints
-            local minX = 0
-            local maxX = viewport.X - frameSize.X
-            local minY = 0
-            local maxY = viewport.Y - frameSize.Y
-            
-            -- Apply constraints
-            local constrainedX = math.clamp(newPosition.X.Offset, minX, maxX)
-            local constrainedY = math.clamp(newPosition.Y.Offset, minY, maxY)
-            
-            frame.Position = UDim2.new(0, constrainedX, 0, constrainedY)
+            -- Apply the new position directly (remove constraints for now to test)
+            frame.Position = newPosition
         end
     end)
     
@@ -427,9 +414,15 @@ function ProfessionalUI:ToggleVisibility()
     local statusIndicator = self.ToggleUI:FindFirstChild("StatusIndicator")
     
     if self.Visible then
-        -- Show all windows
+        -- Show all windows with proper centering
         for _, window in ipairs(self.Windows) do
             window.Frame.Visible = true
+            
+            -- Ensure window is centered
+            local windowWidth = window.Size.X.Offset
+            local windowHeight = window.Size.Y.Offset
+            window.Frame.Position = UDim2.new(0.5, -windowWidth/2, 0.5, -windowHeight/2)
+            
             Utils.Tween(window.Frame, {Size = window.Size}, 0.3, Enum.EasingStyle.Back, Enum.EasingDirection.Out)
         end
         
@@ -443,7 +436,7 @@ function ProfessionalUI:ToggleVisibility()
         
         self:CreateNotification({
             title = "Interface Opened",
-            text = "Professional UI is now visible",
+            text = "Professional UI is now visible and centered",
             type = "success",
             duration = 2
         })
@@ -740,6 +733,16 @@ function ProfessionalUI:CreateKeySystem(options)
             Utils.Tween(keyFrame, {Size = UDim2.new(0, 0, 0, 0)}, 0.3, nil, nil, function()
                 keyFrame:Destroy()
                 self:Show() -- Show main interface
+                
+                -- Ensure all windows are properly centered after showing
+                for _, window in ipairs(self.Windows) do
+                    if window.Frame then
+                        local windowWidth = window.Size.X.Offset
+                        local windowHeight = window.Size.Y.Offset
+                        window.Frame.Position = UDim2.new(0.5, -windowWidth/2, 0.5, -windowHeight/2)
+                    end
+                end
+                
                 keySystem.Callback()
             end)
         else
@@ -817,11 +820,15 @@ function ProfessionalUI:CreateWindow(title, size)
         Elements = {}
     }
     
-    -- Main window frame
+    -- Calculate center position based on window size
+    local windowWidth = window.Size.X.Offset
+    local windowHeight = window.Size.Y.Offset
+    
+    -- Main window frame - positioned in center
     window.Frame = Utils.Create("Frame", {
         Name = "Window",
         BackgroundColor3 = self.Theme.Surface,
-        Position = UDim2.new(0.5, -300 * self.Scale, 0.5, -200 * self.Scale),
+        Position = UDim2.new(0.5, -windowWidth/2, 0.5, -windowHeight/2), -- Center the window
         Size = window.Size,
         Parent = self.ScreenGui,
         ZIndex = 10
