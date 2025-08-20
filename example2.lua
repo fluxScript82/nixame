@@ -1,80 +1,71 @@
---[[
-    Example usage of the Professional UI Library
-    Load via: local ProfessionalUI = loadstring(game:HttpGet("https://raw.githubusercontent.com/fluxScript82/nixame/refs/heads/main/source2.lua"))()
-]]
+-- WORKING EXAMPLE - Copy this exact code to test
+-- This should work in any Roblox executor
 
-local ProfessionalUI = loadstring(game:HttpGet("https://raw.githubusercontent.com/fluxScript82/nixame/refs/heads/main/source2.lua"))()
-if not ProfessionalUI then
-    warn("Failed to load Professional UI Library.")
-    return
-end
+local ProfessionalUI = loadstring(game:HttpGet("https://raw.githubusercontent.com/fluxScript82/nixame/main/source2.lua"))()
 
--- Key System (Optional)
-ProfessionalUI:CreateKeySystem({
-    Title = "Professional UI - Key System",
-    Description = "Enter your key to access the UI",
-    Key = "ProfessionalUI2024",
-    KeyLink = "https://example.com/getkey",
+-- Simple test without key system first
+local Window = ProfessionalUI:CreateWindow({
+    Title = "Professional UI v3.0 - Working!",
+    Size = Vector2.new(500, 350),
+    Theme = "Dark",
+    Draggable = true,
+    MinimizeToTray = true
+})
+
+-- Create a test tab
+local MainTab = Window:CreateTab({
+    Name = "Main"
+})
+
+-- Add some test elements
+MainTab:CreateLabel({
+    Text = "✅ Professional UI v3.0 is working!"
+})
+
+MainTab:CreateButton({
+    Text = "Test Button",
     Callback = function()
-        print("Key accepted! Loading main UI...")
-
-        -- Create main window after key verification
-        local Window = ProfessionalUI:CreateWindow({
-            Title = "Professional UI Library",
-            Size = Vector2.new(600, 400),
-            Theme = "Dark",
-            Draggable = true
-        })
-
-        -- Create Main Tab
-        local MainTab = Window:CreateTab({
-            Name = "Main",
-            Icon = nil
-        })
-
-        -- Add elements to Main tab
-        MainTab:CreateLabel({
-            Text = "Welcome to Professional UI Library!"
-        })
-
-        MainTab:CreateButton({
-            Text = "Test Button",
-            Callback = function()
-                print("Button clicked!")
-            end
-        })
-
-        MainTab:CreateToggle({
-            Text = "Auto Farm",
-            Default = false,
-            Callback = function(value)
-                print("Auto Farm:", value)
-            end
-        })
-
-        MainTab:CreateSlider({
-            Text = "Walk Speed",
-            Min = 16,
-            Max = 100,
-            Default = 16,
-            Callback = function(value)
-                print("Walk Speed:", value)
-                local char = game.Players.LocalPlayer.Character
-                if char and char:FindFirstChildOfClass("Humanoid") then
-                    char:FindFirstChildOfClass("Humanoid").WalkSpeed = value
-                end
-            end
-        })
-
-        MainTab:CreateDropdown({
-            Text = "Teleport Location",
-            Options = {"Spawn", "Shop", "Boss Arena", "Secret Area"},
-            Default = "Spawn",
-            Callback = function(option)
-                print("Selected location:", option)
-                -- Add teleport functionality here if needed
-            end
-        })
-
+        print("Button clicked! UI is working perfectly!")
     end
 })
+
+MainTab:CreateToggle({
+    Text = "Test Toggle",
+    Default = false,
+    Callback = function(value)
+        print("Toggle:", value)
+    end
+})
+
+-- Create another tab
+local SettingsTab = Window:CreateTab({
+    Name = "Settings"
+})
+
+SettingsTab:CreateLabel({
+    Text = "Settings Tab - Everything works!"
+})
+
+SettingsTab:CreateButton({
+    Text = "Print Message",
+    Callback = function()
+        print("Settings button works!")
+    end
+})
+
+print("🎉 Professional UI v3.0 loaded successfully!")
+
+-- Uncomment below to test with key system
+--[[
+local keySystem = ProfessionalUI:CreateKeySystem({
+    Title = "Professional UI v3.0",
+    Description = "Enter key to access the UI",
+    Key = "test123",
+    KeyLink = "https://example.com/key",
+    Theme = "Dark",
+    Callback = function()
+        print("Key accepted! Loading main UI...")
+        -- Put your main UI code here
+    end
+})
+--]]
