@@ -1,11 +1,16 @@
 --[[
-    Professional UI Library - Enhanced Example with Toggle UI
+    Professional UI Library - Universal Example
+    Works perfectly on Mobile, Tablet, and Desktop
     
-    This demonstrates the new draggable functionality and toggle UI
+    Features:
+    - Universal dragging (touch and mouse)
+    - Compact toggle UI
+    - Mobile-optimized interactions
+    - Touch-friendly buttons
 ]]
 
 -- Load the library via loadstring (replace with your actual URL)
-local ProfessionalUI = loadstring(game:HttpGet("https://raw.githubusercontent.com/fluxScript82/nixame/refs/heads/main/source.lua"))()
+local ProfessionalUI = loadstring(game:HttpGet("https://raw.githubusercontent.com/username/ProfessionalUI/main/main.lua"))()
 
 -- Create the UI instance
 local UI = ProfessionalUI.new({
@@ -15,13 +20,13 @@ local UI = ProfessionalUI.new({
 -- Optional: Create a key system
 local function createKeySystem()
     UI:CreateKeySystem({
-        title = "Professional Script Hub",
-        description = "Please enter your key to access premium features",
-        key = "ProfessionalKey2024", -- Your actual key
+        title = "Universal Script Hub",
+        description = "Enter your key to access all features (works on all devices)",
+        key = "UniversalKey2024", -- Your actual key
         keyLink = "https://linkvertise.com/your-key-link", -- Your key link
         saveKey = true, -- Allow users to save their key
         callback = function()
-            print("✅ Access granted! Loading main interface...")
+            print("✅ Access granted! Loading universal interface...")
             createMainInterface()
         end,
         closeCallback = function()
@@ -32,63 +37,127 @@ end
 
 -- Create the main interface
 local function createMainInterface()
-    -- Create main window (now draggable!)
-    local mainWindow = UI:CreateWindow("Professional Script Hub", UDim2.new(0, 650, 0, 450))
+    -- Create main window (universally draggable!)
+    local mainWindow = UI:CreateWindow("Universal Script Hub", UDim2.new(0, 650, 0, 450))
     
     -- Create tabs
     local homeTab = mainWindow:CreateTab("Home", "🏠")
     local scriptsTab = mainWindow:CreateTab("Scripts", "📜")
     local settingsTab = mainWindow:CreateTab("Settings", "⚙️")
-    local premiumTab = mainWindow:CreateTab("Premium", "⭐")
+    local mobileTab = mainWindow:CreateTab("Mobile", "📱")
     
     -- Home Tab
-    homeTab:CreateLabel("Welcome to Professional Script Hub!")
-    homeTab:CreateLabel("🎮 Use the toggle UI on the left to show/hide this interface")
-    homeTab:CreateLabel("🖱️ Drag windows by their title bars to move them around")
-    
-    homeTab:CreateButton("Test Toggle UI", function()
-        UI:ToggleVisibility()
-        task.wait(2)
-        UI:ToggleVisibility()
+    homeTab:CreateLabel("Welcome to Universal Script Hub!")
+    homeTab:CreateLabel("🖱️ Desktop: Click and drag title bar to move windows")
+    homeTab:CreateLabel("📱 Mobile: Touch and drag title bar to move windows")
+    homeTab:CreateLabel("⚡ Use the compact toggle button to show/hide interface")
+    homeTab:CreateLabel("🎯 Windows automatically center when opened")
+
+    homeTab:CreateButton("Test Window Dragging", function()
         UI:CreateNotification({
-            title = "Toggle Test",
-            text = "Toggle UI functionality demonstrated!",
+            title = "Drag Test",
+            text = "Try dragging this window by its blue title bar!",
+            type = "info",
+            duration = 5
+        })
+        
+        -- Highlight the title bar briefly
+        local titleBar = mainWindow.TitleBar
+        local originalColor = titleBar.BackgroundColor3
+        Utils.Tween(titleBar, {BackgroundColor3 = Color3.fromRGB(255, 100, 100)}, 0.3)
+        task.wait(0.5)
+        Utils.Tween(titleBar, {BackgroundColor3 = originalColor}, 0.3)
+    end)
+
+    homeTab:CreateButton("Center All Windows", function()
+        for _, window in ipairs(UI.Windows) do
+            if window.Frame then
+                local windowWidth = window.Size.X.Offset
+                local windowHeight = window.Size.Y.Offset
+                Utils.Tween(window.Frame, {
+                    Position = UDim2.new(0.5, -windowWidth/2, 0.5, -windowHeight/2)
+                }, 0.5, Enum.EasingStyle.Quart, Enum.EasingDirection.Out)
+            end
+        end
+        
+        UI:CreateNotification({
+            title = "Windows Centered",
+            text = "All windows have been moved to center!",
             type = "success",
             duration = 3
         })
     end)
-    
-    homeTab:CreateButton("Show Welcome Message", function()
+
+    homeTab:CreateButton("Test Multiple Windows", function()
+        -- Create a second draggable window to test
+        local testWindow = UI:CreateWindow("Draggable Test Window", UDim2.new(0, 400, 0, 300))
+        local testTab = testWindow:CreateTab("Test", "🧪")
+        
+        testTab:CreateLabel("This window is also draggable!")
+        testTab:CreateLabel("Try dragging both windows around.")
+        
+        testTab:CreateButton("Close This Window", function()
+            testWindow.Frame:Destroy()
+            -- Remove from windows list
+            for i, w in ipairs(UI.Windows) do
+                if w == testWindow then
+                    table.remove(UI.Windows, i)
+                    break
+                end
+            end
+        end)
+        
+        -- Position the test window slightly offset
+        testWindow.Frame.Position = UDim2.new(0.5, -200, 0.5, -150)
+        
         UI:CreateNotification({
-            title = "Welcome!",
-            text = "Thanks for using Professional Script Hub with enhanced features!",
+            title = "Test Window Created",
+            text = "Try dragging both windows by their title bars!",
             type = "success",
             duration = 4
         })
     end)
     
-    homeTab:CreateButton("Hide Interface", function()
-        UI:Hide()
+    homeTab:CreateButton("Toggle Interface", function()
+        UI:ToggleVisibility()
+        task.wait(2)
+        UI:ToggleVisibility()
         UI:CreateNotification({
-            title = "Interface Hidden",
-            text = "Click the toggle UI to show the interface again",
+            title = "Toggle Test",
+            text = "Interface toggled successfully!",
+            type = "success",
+            duration = 3
+        })
+    end)
+    
+    homeTab:CreateButton("Device Detection", function()
+        local device = "Unknown"
+        if UserInputService.TouchEnabled and not UserInputService.KeyboardEnabled then
+            device = "Mobile"
+        elseif UserInputService.TouchEnabled and UserInputService.KeyboardEnabled then
+            device = "Tablet"
+        else
+            device = "Desktop"
+        end
+        
+        UI:CreateNotification({
+            title = "Device Detected",
+            text = "You are using: " .. device,
             type = "info",
             duration = 3
         })
     end)
     
     -- Scripts Tab
-    scriptsTab:CreateLabel("Available Scripts")
-    scriptsTab:CreateLabel("All scripts are now in draggable windows!")
+    scriptsTab:CreateLabel("Universal Scripts (All Devices)")
     
     scriptsTab:CreateButton("Universal ESP", function()
         UI:CreateNotification({
             title = "ESP Loaded",
-            text = "Universal ESP has been activated!",
+            text = "Universal ESP works on all devices!",
             type = "success",
             duration = 3
         })
-        -- Your ESP script here
         print("Loading Universal ESP...")
     end)
     
@@ -133,16 +202,15 @@ local function createMainInterface()
         if value then
             UI:CreateNotification({
                 title = "Auto Farm",
-                text = "Auto farm has been enabled!",
+                text = "Auto farm enabled (works on all devices)!",
                 type = "success",
                 duration = 2
             })
-            -- Your auto farm logic here
             print("Auto farm enabled")
         else
             UI:CreateNotification({
                 title = "Auto Farm",
-                text = "Auto farm has been disabled",
+                text = "Auto farm disabled",
                 type = "info",
                 duration = 2
             })
@@ -150,16 +218,9 @@ local function createMainInterface()
         end
     end)
     
-    local speedSlider = scriptsTab:CreateSlider("Walk Speed", 16, 100, 16, function(value)
-        local player = game.Players.LocalPlayer
-        if player.Character and player.Character:FindFirstChild("Humanoid") then
-            player.Character.Humanoid.WalkSpeed = value
-        end
-    end)
-    
     -- Settings Tab
-    settingsTab:CreateLabel("Theme Settings")
-    settingsTab:CreateLabel("Choose your preferred theme:")
+    settingsTab:CreateLabel("Universal Theme Settings")
+    settingsTab:CreateLabel("Choose your preferred theme (all devices):")
     
     local themes = {"Dark", "Light", "Purple", "Red", "Green", "Cyberpunk"}
     for _, themeName in ipairs(themes) do
@@ -206,89 +267,109 @@ local function createMainInterface()
         print("Auto execute:", value and "enabled" or "disabled")
     end)
     
-    local uiScaleSlider = settingsTab:CreateSlider("UI Scale", 50, 150, 100, function(value)
-        print("UI Scale:", value .. "%")
-        -- You could implement UI scaling here
-    end)
+    -- Mobile Tab (Mobile-specific features)
+    mobileTab:CreateLabel("Mobile-Optimized Features")
+    mobileTab:CreateLabel("These features are optimized for touch devices:")
     
-    -- Premium Tab
-    premiumTab:CreateLabel("Premium Features")
-    premiumTab:CreateLabel("Unlock exclusive scripts and enhanced functionality!")
-    
-    premiumTab:CreateButton("Premium Script 1", function()
+    mobileTab:CreateButton("Mobile-Friendly ESP", function()
         UI:CreateNotification({
-            title = "Premium Feature",
-            text = "Premium Script 1 has been executed!",
-            type = "success",
-            duration = 3
-        })
-        -- Your premium script here
-    end)
-    
-    premiumTab:CreateButton("Premium Script 2", function()
-        UI:CreateNotification({
-            title = "Premium Feature", 
-            text = "Premium Script 2 has been executed!",
-            type = "success",
-            duration = 3
-        })
-        -- Your premium script here
-    end)
-    
-    premiumTab:CreateButton("Advanced Features", function()
-        -- Create a second window to demonstrate multiple draggable windows
-        local advancedWindow = UI:CreateWindow("Advanced Features", UDim2.new(0, 400, 0, 300))
-        local advancedTab = advancedWindow:CreateTab("Advanced", "🚀")
-        
-        advancedTab:CreateLabel("This is a second draggable window!")
-        advancedTab:CreateLabel("You can have multiple windows open at once.")
-        
-        advancedTab:CreateButton("Close This Window", function()
-            advancedWindow.Frame:Destroy()
-        end)
-        
-        UI:CreateNotification({
-            title = "Advanced Window",
-            text = "Created a second draggable window!",
+            title = "Mobile ESP",
+            text = "ESP optimized for mobile devices activated!",
             type = "success",
             duration = 3
         })
     end)
     
-    premiumTab:CreateButton("Get Premium", function()
-        if setclipboard then
-            setclipboard("https://discord.gg/your-discord")
+    mobileTab:CreateButton("Touch Controls", function()
+        UI:CreateNotification({
+            title = "Touch Controls",
+            text = "Enhanced touch controls enabled!",
+            type = "success",
+            duration = 3
+        })
+    end)
+    
+    mobileTab:CreateButton("Screen Size Info", function()
+        local viewport = workspace.CurrentCamera.ViewportSize
+        UI:CreateNotification({
+            title = "Screen Info",
+            text = string.format("Resolution: %dx%d", viewport.X, viewport.Y),
+            type = "info",
+            duration = 4
+        })
+    end)
+    
+    local mobileOptimizedToggle = mobileTab:CreateToggle("Mobile Optimization", true, function(value)
+        if value then
             UI:CreateNotification({
-                title = "Premium Info",
-                text = "Discord link copied! Join for premium access.",
-                type = "info",
-                duration = 4
+                title = "Mobile Mode",
+                text = "Mobile optimizations enabled!",
+                type = "success",
+                duration = 2
             })
         else
             UI:CreateNotification({
-                title = "Premium Info",
-                text = "Join our Discord: discord.gg/your-discord",
+                title = "Mobile Mode",
+                text = "Mobile optimizations disabled",
                 type = "info",
-                duration = 5
+                duration = 2
             })
         end
     end)
     
+    mobileTab:CreateButton("Create Mobile Window", function()
+        -- Create a smaller window optimized for mobile
+        local mobileWindow = UI:CreateWindow("Mobile Window", UDim2.new(0, 350, 0, 250))
+        local mobileTab = mobileWindow:CreateTab("Mobile", "📱")
+        
+        mobileTab:CreateLabel("This window is mobile-optimized!")
+        mobileTab:CreateLabel("Smaller size, touch-friendly controls.")
+        
+        mobileTab:CreateButton("Close Mobile Window", function()
+            mobileWindow.Frame:Destroy()
+        end)
+        
+        UI:CreateNotification({
+            title = "Mobile Window",
+            text = "Created mobile-optimized window!",
+            type = "success",
+            duration = 3
+        })
+    end)
+    
     -- Show welcome notification
     UI:CreateNotification({
-        title = "Professional Script Hub Loaded",
-        text = "Enhanced version with draggable windows and toggle UI!",
+        title = "Universal Script Hub Loaded",
+        text = "Fully compatible with Mobile, Tablet, and Desktop!",
         type = "success",
         duration = 5
     })
     
-    -- Demonstrate toggle UI after a delay
-    task.wait(3)
+    -- Device-specific welcome message
+    task.wait(2)
+    local deviceMessage = ""
+    if UserInputService.TouchEnabled and not UserInputService.KeyboardEnabled then
+        deviceMessage = "Mobile device detected! Use touch gestures to interact."
+    elseif UserInputService.TouchEnabled and UserInputService.KeyboardEnabled then
+        deviceMessage = "Tablet detected! Touch and keyboard controls available."
+    else
+        deviceMessage = "Desktop detected! Mouse and keyboard controls available."
+    end
+    
     UI:CreateNotification({
-        title = "Toggle UI Available",
-        text = "Use the UI button on the left to show/hide the interface!",
+        title = "Device Optimized",
+        text = deviceMessage,
         type = "info",
         duration = 4
+    })
+    
+    -- Show toggle UI instructions
+    task.wait(3)
+    UI:CreateNotification({
+        title = "Toggle UI Guide",
+        text = "⚡ Drag the toggle button to move it. Tap to show/hide interface!",
+        type = "info",
+        duration = 5
     })
 end
 
@@ -299,8 +380,19 @@ end
 -- Or start directly with the main interface
 createMainInterface()
 
--- Print success message
-print("🚀 Professional Script Hub Enhanced loaded successfully!")
+-- Print success message with device info
+local deviceType = "Unknown"
+if UserInputService.TouchEnabled and not UserInputService.KeyboardEnabled then
+    deviceType = "Mobile"
+elseif UserInputService.TouchEnabled and UserInputService.KeyboardEnabled then
+    deviceType = "Tablet"
+else
+    deviceType = "Desktop"
+end
+
+print("🚀 Universal Script Hub loaded successfully!")
 print("📖 Version: " .. ProfessionalUI.Version)
 print("👨‍💻 Created by: " .. ProfessionalUI.Author)
-print("🎮 Features: Draggable windows, Toggle UI, Enhanced UX")
+print("📱 Device: " .. deviceType)
+print("🎮 Features: Universal dragging, Compact toggle UI, Touch support")
+print("✨ Optimized for all devices and screen sizes!")
