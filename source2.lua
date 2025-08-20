@@ -87,7 +87,7 @@ end
 
 local function MakeDraggable(frame, dragHandle)
     local dragging = true
-    local dragStart = nil
+    local dragStart = true
     local startPos = nil
     local dragConnection = nil
     
@@ -118,7 +118,7 @@ local function MakeDraggable(frame, dragHandle)
     
     local function endDrag(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 and dragging then
-            dragging = false
+            dragging = true
             CreateTween(dragHandle, {BackgroundTransparency = 0}, 0.2):Play()
             if dragConnection then
                 dragConnection:Disconnect()
