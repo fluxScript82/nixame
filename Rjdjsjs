@@ -1,0 +1,425 @@
+--[[
+Ftgs Hub UI + Auto Buy Logic (Improved Version)
+Author: fluxScript82
+Paste in a LocalScript (StarterGui > LocalScript)
+--]]
+
+-- Services
+local Players = game:GetService("Players")
+local UserInputService = game:GetService("UserInputService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local TweenService = game:GetService("TweenService")
+
+-- Variables
+local player = Players.LocalPlayer
+local gui = nil
+local hubFrame = nil
+local isOpen = true
+local autoBuyEnabled = false
+local running = false
+local remoteThread = nil
+
+-- Remote setup
+local remoteFolder = ReplicatedStorage:WaitForChild("BridgeNet2")
+local remote = remoteFolder:WaitForChild("dataRemoteEvent")
+
+-- Data
+local allGears = {
+    "Water Bucket",
+    "Frost Grenade",
+    "Cocotank",
+}
+
+local allSeeds = {
+    "Sunflower Seed",
+    "Dragon Fruit Seed",
+    "Water Bucket",
+    "Frost Grenade",
+    "Cocotank",
+    "Watermelon",
+    "Eggplant",
+    "Carnivorous Plant Seed",
+    "Mr Carrot Seed",
+    "Tomatrio Seed",
+}
+
+-- Auto Buy Functions
+local function autoBuyAllGears()
+    if not autoBuyEnabled then return end
+    
+    for _, gear in ipairs(allGears) do
+        local args = {
+            { gear, " " }
+        }
+        remote:FireServer(unpack(args))
+        task.wait(0.05)
+    end
+end
+
+local function autoRemoteLoop()
+    while running and autoBuyEnabled do
+        local args1 = {
+            { [2] = "5" }
+        }
+        remote:FireServer(unpack(args1))
+        
+        for _, seed in ipairs(allSeeds) do
+            local args2 = {
+                { seed, "\a" }
+            }
+            remote:FireServer(unpack(args2))
+            task.wait(0.05)
+        end
+        
+        autoBuyAllGears()
+        task.wait(0.3)
+    end
+end
+
+-- UI Creation Functions
+local function createToggleButton(parent, text, subtext, icon, initialState, callback)
+    local btnFrame = Instance.new("Frame")
+    btnFrame.Size = UDim2.new(1, -18, 0, subtext and 50 or 40)
+    btnFrame.BackgroundColor3 = Color3.fromRGB(55, 55, 55)
+    btnFrame.BorderSizePixel = 0
+    btnFrame.Parent = parent
+    
+    local btnCorner = Instance.new("UICorner", btnFrame)
+    btnCorner.CornerRadius = UDim.new(0, 10)
+    
+    local btn = Instance.new("TextButton")
+    btn.Size = UDim2.new(1, 0, 1, 0)
+    btn.BackgroundTransparency = 1
+    btn.Text = ""
+    btn.AutoButtonColor = false
+    btn.Parent = btnFrame
+    
+    local btnTitle = Instance.new("TextLabel")
+    btnTitle.Size = UDim2.new(1, -80, 0, 16)
+    btnTitle.Position = UDim2.new(0, 12, 0, 7)
+    btnTitle.BackgroundTransparency = 1
+    btnTitle.Text = text
+    btnTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
+    btnTitle.Font = Enum.Font.GothamBold
+    btnTitle.TextSize = 13
+    btnTitle.TextXAlignment = Enum.TextXAlignment.Left
+    btnTitle.Parent = btnFrame
+    
+    if subtext then
+        local btnSub = Instance.new("TextLabel")
+        btnSub.Size = UDim2.new(1, -80, 0, 12)
+        btnSub.Position = UDim2.new(0, 12, 0, 25)
+        btnSub.BackgroundTransparency = 1
+        btnSub.Text = subtext
+        btnSub.TextColor3 = Color3.fromRGB(180, 180, 180)
+        btnSub.Font = Enum.Font.Gotham
+        btnSub.TextSize = 10
+        btnSub.TextXAlignment = Enum.TextXAlignment.Left
+        btnSub.Parent = btnFrame
+    end
+    
+    -- Toggle switch
+    local toggleFrame = Instance.new("Frame")
+    toggleFrame.Size = UDim2.new(0, 40, 0, 20)
+    toggleFrame.Position = UDim2.new(1, -50, 0, 10)
+    toggleFrame.BackgroundColor3 = initialState and Color3.fromRGB(0, 170, 0) or Color3.fromRGB(100, 100, 100)
+    toggleFrame.BorderSizePixel = 0
+    toggleFrame.Parent = btnFrame
+    
+    local toggleCorner = Instance.new("UICorner", toggleFrame)
+    toggleCorner.CornerRadius = UDim.new(0, 10)
+    
+    local toggleButton = Instance.new("Frame")
+    toggleButton.Size = UDim2.new(0, 16, 0, 16)
+    toggleButton.Position = initialState and UDim2.new(0, 22, 0, 2) or UDim2.new(0, 2, 0, 2)
+    toggleButton.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    toggleButton.BorderSizePixel = 0
+    toggleButton.Parent = toggleFrame
+    
+    local toggleBtnCorner = Instance.new("UICorner", toggleButton)
+    toggleBtnCorner.CornerRadius = UDim.new(0, 8)
+    
+    local state = initialState
+    
+    btn.MouseButton1Click:Connect(function()
+        state = not state
+        
+        local colorTween = TweenService:Create(
+            toggleFrame,
+            TweenInfo.new(0.2, Enum.EasingStyle.Quad),
+            {BackgroundColor3 = state and Color3.fromRGB(0, 170, 0) or Color3.fromRGB(100, 100, 100)}
+        )
+        
+        local positionTween = TweenService:Create(
+            toggleButton,
+            TweenInfo.new(0.2, Enum.EasingStyle.Quad),
+            {Position = state and UDim2.new(0, 22, 0, 2) or UDim2.new(0, 2, 0, 2)}
+        )
+        
+        colorTween:Play()
+        positionTween:Play()
+        
+        if callback then
+            callback(state)
+        end
+    end)
+    
+    return btnFrame
+end
+
+local function createButtonEntry(parent, text, subtext, icon, locked, callback)
+    local btnFrame = Instance.new("Frame")
+    btnFrame.Size = UDim2.new(1, -18, 0, subtext and 50 or 40)
+    btnFrame.BackgroundColor3 = locked and Color3.fromRGB(30, 30, 30) or Color3.fromRGB(55, 55, 55)
+    btnFrame.BorderSizePixel = 0
+    btnFrame.Parent = parent
+    
+    local btnCorner = Instance.new("UICorner", btnFrame)
+    btnCorner.CornerRadius = UDim.new(0, 10)
+    
+    local btn = Instance.new("TextButton")
+    btn.Size = UDim2.new(1, 0, 1, 0)
+    btn.BackgroundTransparency = 1
+    btn.Text = ""
+    btn.AutoButtonColor = not locked
+    btn.Parent = btnFrame
+    
+    if callback and not locked then
+        btn.MouseButton1Click:Connect(function()
+            pcall(callback)
+        end)
+    end
+    
+    local btnTitle = Instance.new("TextLabel")
+    btnTitle.Size = UDim2.new(1, -54, 0, 16)
+    btnTitle.Position = UDim2.new(0, 12, 0, 7)
+    btnTitle.BackgroundTransparency = 1
+    btnTitle.Text = text
+    btnTitle.TextColor3 = locked and Color3.fromRGB(120, 120, 120) or Color3.fromRGB(255, 255, 255)
+    btnTitle.Font = Enum.Font.GothamBold
+    btnTitle.TextSize = 13
+    btnTitle.TextXAlignment = Enum.TextXAlignment.Left
+    btnTitle.Parent = btnFrame
+    
+    if subtext then
+        local btnSub = Instance.new("TextLabel")
+        btnSub.Size = UDim2.new(1, -54, 0, 12)
+        btnSub.Position = UDim2.new(0, 12, 0, 25)
+        btnSub.BackgroundTransparency = 1
+        btnSub.Text = subtext
+        btnSub.TextColor3 = locked and Color3.fromRGB(80, 80, 80) or Color3.fromRGB(180, 180, 180)
+        btnSub.Font = Enum.Font.Gotham
+        btnSub.TextSize = 10
+        btnSub.TextXAlignment = Enum.TextXAlignment.Left
+        btnSub.Parent = btnFrame
+    end
+    
+    local iconLabel = Instance.new("TextLabel")
+    iconLabel.Size = UDim2.new(0, 18, 0, 18)
+    iconLabel.Position = UDim2.new(1, -28, 0, 11)
+    iconLabel.BackgroundTransparency = 1
+    iconLabel.Text = icon
+    iconLabel.TextColor3 = locked and Color3.fromRGB(160, 160, 160) or Color3.fromRGB(220, 220, 220)
+    iconLabel.Font = Enum.Font.Gotham
+    iconLabel.TextSize = 13
+    iconLabel.Parent = btnFrame
+    
+    if locked then
+        local lockIcon = Instance.new("TextLabel")
+        lockIcon.Size = UDim2.new(0, 18, 0, 18)
+        lockIcon.Position = UDim2.new(0, 12, 0, 11)
+        lockIcon.BackgroundTransparency = 1
+        lockIcon.Text = "🔒"
+        lockIcon.TextColor3 = Color3.fromRGB(200, 200, 200)
+        lockIcon.Font = Enum.Font.Gotham
+        lockIcon.TextSize = 12
+        lockIcon.Parent = btnFrame
+    end
+    
+    return btnFrame
+end
+
+-- Toggle GUI Function
+local function toggleGUI()
+    if not hubFrame then return end
+    
+    isOpen = not isOpen
+    
+    local targetPosition = isOpen and UDim2.new(0.5, 0, 0.5, 0) or UDim2.new(0.5, 0, -0.5, 0)
+    
+    local tween = TweenService:Create(
+        hubFrame,
+        TweenInfo.new(0.3, Enum.EasingStyle.Back),
+        {Position = targetPosition}
+    )
+    
+    tween:Play()
+end
+
+-- Create GUI Function
+local function createGUI()
+    -- Main ScreenGui
+    gui = Instance.new("ScreenGui")
+    gui.Name = "FtgsHub"
+    gui.Parent = player:WaitForChild("PlayerGui")
+    gui.IgnoreGuiInset = true
+    gui.ResetOnSpawn = false
+    
+    -- Main Hub Frame
+    hubFrame = Instance.new("Frame")
+    hubFrame.Size = UDim2.new(0, 420, 0, 350)
+    hubFrame.Position = UDim2.new(0.5, 0, 0.5, 0)
+    hubFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+    hubFrame.BorderSizePixel = 0
+    hubFrame.Parent = gui
+    hubFrame.AnchorPoint = Vector2.new(0.5, 0.5)
+    
+    local hubCorner = Instance.new("UICorner", hubFrame)
+    hubCorner.CornerRadius = UDim.new(0, 12)
+    
+    -- Top bar
+    local topBar = Instance.new("Frame")
+    topBar.Size = UDim2.new(1, 0, 0, 30)
+    topBar.BackgroundTransparency = 1
+    topBar.Parent = hubFrame
+    
+    local title = Instance.new("TextLabel")
+    title.Size = UDim2.new(0, 150, 0, 30)
+    title.Position = UDim2.new(0, 16, 0, 0)
+    title.BackgroundTransparency = 1
+    title.Text = ".ftgs hub"
+    title.TextColor3 = Color3.fromRGB(220, 220, 220)
+    title.Font = Enum.Font.GothamBold
+    title.TextXAlignment = Enum.TextXAlignment.Left
+    title.TextYAlignment = Enum.TextYAlignment.Center
+    title.TextSize = 16
+    title.Parent = topBar
+    
+    -- Close button
+    local closeButton = Instance.new("TextButton")
+    closeButton.Size = UDim2.new(0, 30, 0, 30)
+    closeButton.Position = UDim2.new(1, -35, 0, 0)
+    closeButton.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
+    closeButton.Text = "×"
+    closeButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+    closeButton.Font = Enum.Font.GothamBold
+    closeButton.TextSize = 18
+    closeButton.AutoButtonColor = false
+    closeButton.Parent = topBar
+    
+    local closeCorner = Instance.new("UICorner", closeButton)
+    closeCorner.CornerRadius = UDim.new(0, 8)
+    
+    closeButton.MouseButton1Click:Connect(toggleGUI)
+    
+    -- Main Content Frame
+    local mainFrame = Instance.new("Frame")
+    mainFrame.Size = UDim2.new(1, -20, 1, -50)
+    mainFrame.Position = UDim2.new(0, 10, 0, 40)
+    mainFrame.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+    mainFrame.BorderSizePixel = 0
+    mainFrame.Parent = hubFrame
+    
+    local mainCorner = Instance.new("UICorner", mainFrame)
+    mainCorner.CornerRadius = UDim.new(0, 10)
+    
+    local mainList = Instance.new("UIListLayout", mainFrame)
+    mainList.Padding = UDim.new(0, 8)
+    mainList.SortOrder = Enum.SortOrder.LayoutOrder
+    
+    local padding = Instance.new("UIPadding", mainFrame)
+    padding.PaddingTop = UDim.new(0, 10)
+    padding.PaddingLeft = UDim.new(0, 10)
+    padding.PaddingRight = UDim.new(0, 10)
+    padding.PaddingBottom = UDim.new(0, 10)
+    
+    -- Auto Buy Toggle
+    createToggleButton(mainFrame, "Auto Buy", "Toggle automatic buying on/off", "🛒", autoBuyEnabled, function(state)
+        autoBuyEnabled = state
+        if not state and running then
+            running = false
+            if remoteThread then
+                task.cancel(remoteThread)
+                remoteThread = nil
+            end
+        end
+        print("Auto Buy:", state and "ON" or "OFF")
+    end)
+    
+    -- Manual Buy Gears Button
+    createButtonEntry(mainFrame, "Buy All Gears", "Manually buy all gears once", "⚙️", false, function()
+        if autoBuyEnabled then
+            autoBuyAllGears()
+        else
+            print("Auto Buy is disabled!")
+        end
+    end)
+    
+    -- Auto Remote Loop Toggle
+    createToggleButton(mainFrame, "Auto Remote Loop", "Toggle automatic remote loop", "🔄", running, function(state)
+        if not autoBuyEnabled then
+            print("Enable Auto Buy first!")
+            return
+        end
+        
+        running = state
+        if running then
+            remoteThread = task.spawn(autoRemoteLoop)
+            print("Auto Remote Loop: ON")
+        else
+            if remoteThread then
+                task.cancel(remoteThread)
+                remoteThread = nil
+            end
+            print("Auto Remote Loop: OFF")
+        end
+    end)
+    
+    -- Locked Features
+    createButtonEntry(mainFrame, "Premium Feature", "Unlock with premium", "✨", true)
+    createButtonEntry(mainFrame, "Advanced Settings", "Coming soon", "⚙️", true)
+    
+    -- Dragging functionality
+    local dragging = false
+    local dragStart = nil
+    local startPos = nil
+    
+    topBar.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            dragging = true
+            dragStart = input.Position
+            startPos = hubFrame.Position
+            
+            input.Changed:Connect(function()
+                if input.UserInputState == Enum.UserInputState.End then
+                    dragging = false
+                end
+            end)
+        end
+    end)
+    
+    UserInputService.InputChanged:Connect(function(input)
+        if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+            local delta = input.Position - dragStart
+            hubFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+        end
+    end)
+end
+
+-- Keybind to toggle GUI (Insert key)
+UserInputService.InputBegan:Connect(function(input, gameProcessed)
+    if gameProcessed then return end
+    
+    if input.KeyCode == Enum.KeyCode.Insert then
+        if not gui then
+            createGUI()
+        else
+            toggleGUI()
+        end
+    end
+end)
+
+-- Initialize GUI
+createGUI()
+
+print("Ftgs Hub loaded! Press INSERT to toggle GUI")
